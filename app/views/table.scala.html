@@ -1,0 +1,28 @@
+@(tables: Array[String])(implicit request: RequestHeader)
+<ul>
+@for(table <- tables) {
+    <li>@table</li>
+}
+</ul>
+
+<div class="columns"></div>
+
+<script type="text/javascript" src="@routes.Assets.versioned("jquery/jquery-2.1.1.min.js")"></script>
+<script type="text/javascript">
+        $("ul li").click(function() {
+            var table = $(this).text();
+            $.ajax({
+                type : 'POST',
+                url : "/getMetaTable",
+                data: {table},
+                dataType : "json",
+                success : function(columns) {
+                    html = "";
+                    for (index in columns) {
+                        html += `<div> Field : ${columns[index].name} - Type:  ${columns[index].data_type} - Null :  ${columns[index].null_col} - Key :  ${columns[index].key} - Default :  ${columns[index].default} - Extra : ${columns[index].extra}</div>`;
+                    }
+                    $('.columns').html(html)
+                }
+            });
+        })
+</script>
