@@ -34,6 +34,7 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.0"
 libraryDependencies += "org.mongodb.spark" %% "mongo-spark-connector" % "2.4.0"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.0"
 
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.doan3.controllers._"
 

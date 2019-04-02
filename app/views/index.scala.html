@@ -1,37 +1,169 @@
-@(tables: Array[String], form: Form[WidgetForm.Data])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Flowchart</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="@routes.Assets.versioned("libs/bootstrap/css/bootstrap.min.css")">
+        <link rel="stylesheet" href="@routes.Assets.versioned("libs/toastr/toastr.min.css")">
+        <link rel="stylesheet" href="@routes.Assets.versioned("assets/css/style.css")">
+    </head>
+    <button onclick="loadingMedata()"> click here</button>
+    <body onload="init()">
+        <div id="sample">
+            <div style="width: 100%;
+                white-space: nowrap;">
+                <span style="display: inline-block;
+                    vertical-align: top;
+                    width: 100px">
+                    <div id="myPaletteDiv" style="border: solid 1px black;
+                        height: 720px"></div>
+                </span>
 
-@main("Welcome to Play") {
-    <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap/css/bootstrap.min.css")">
+                <span style="display: inline-block;
+                    vertical-align: top;
+                    width: 80%">
+                    <div id="myDiagramDiv" style="border: solid 1px black;
+                        height: 720px"></div>
+                </span>
+            </div>
+            <input id="SelectAll" type="button" onclick="myDiagram.commandHandler.selectAll()" value="Select All" />
+            <input id="Cut" type="button" onclick="myDiagram.commandHandler.cutSelection()" value="Cut" />
+            <input id="Copy" type="button" onclick="myDiagram.commandHandler.copySelection()" value="Copy" />
+            <input id="Paste" type="button" onclick="myDiagram.commandHandler.pasteSelection()" value="Paste" />
+            <input id="Delete" type="button" onclick="myDiagram.commandHandler.deleteSelection()" value="Delete" />
+            <input id="Group" type="button" onclick="myDiagram.commandHandler.groupSelection()" value="Group" />
+            <input id="Ungroup" type="button" onclick="myDiagram.commandHandler.ungroupSelection()" value="Ungroup" />
+            <input id="Undo" type="button" onclick="myDiagram.commandHandler.undo()" value="Undo" />
+            <input id="Redo" type="button" onclick="myDiagram.commandHandler.redo()" value="Redo" />
 
-    <div class="container">
-        <section class="form-connect">
-        @helper.form(action = routes.HomeController.connect()) {
-            @helper.CSRF.formField
+            <p>
+        The FlowChart sample demonstrates several key features of GoJS,
+                namely <a href="../intro/palette.html">Palette</a>s,
+                <a href="../intro/links.html">Linkable nodes</a>, Drag/Drop behavior,
+                <a href="../intro/textBlocks.html">Text Editing</a>, and the use of
+                <a href="../intro/templateMaps.html">Node Template Maps</a> in Diagrams.
+        </p>
+            <p>
+        Mouse-over a Node to view its ports.
+                Drag from these ports to create new Links.
+                Selecting Links allows you to re-shape and re-link them.
+                Selecting a Node and then clicking its TextBlock will allow
+                you to edit text (except on the Start and End Nodes).
+            </p>
+            <button id="SaveButton" onclick="save()">Save</button>
+            <button onclick="load()">Load</button>
+            <input type="file" id="import">
+            Diagram Model saved in JSON format:
+            <textarea id="mySavedModel" style="width: 100%;
+                height: 300px">
+                { "class": "go.GraphLinksModel",
+                "linkFromPortIdProperty": "fromPort",
+                "linkToPortIdProperty": "toPort",
+                "nodeDataArray": [
+                ],
+                "linkDataArray": [
+                ]}
+            </textarea>
+            <p>Click the button below to render the current GoJS Diagram into SVG at one-half scale.
+                The SVG is not interactive like the GoJS diagram, but can be used for printing or display.
+                For more information, see the page on <a href="../intro/makingSVG.html">making SVG</a>.</p>
+            <button onclick="makeSVG()">Render as SVG</button>
+            <div id="SVGArea"></div>
+        </div>
 
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    @helper.inputText(form("hostname"), 'class -> "form-control")
+            <!-- modal mongodb -->
+        <div class="modal fade" id="mongodbModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Configure connection</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                            <!-- hostname -->
+                        <div class="form-group">
+                            <label for="hostname-mg">Host name() or IP address(es)</label>
+                            <input type="text" class="form-control" id="hostname-mg">
+                        </div>
+                            <!-- port -->
+                        <div class="form-group">
+                            <label for="port-mg">Port</label>
+                            <input type="text" class="form-control" id="port-mg">
+                        </div>
+                            <!-- db-name -->
+                        <div class="form-group">
+                            <label for="dbname">Database Name</label>
+                            <input type="text" class="form-control" id="dbname-mg">
+                        </div>
+
+                        <div class="collections"></div>
+                        <div id="msg"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary save" data-key onclick="saveConfigureMongodb(this)">Save changes</button>
+                        <button type="button" class="btn btn-danger check-connect" data-key onclick="checkConnectMongodb(this)">Check connection</button>
+                    </div>
                 </div>
-                <div class="form-group col-md-6">
-                    @helper.inputText(form("port"), 'class -> "form-control")
+            </div>
+        </div>
+
+            <!-- modal sql -->
+        <div class="modal fade" id="sqlModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Property</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                            <!-- data -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success save" data-key onclick="">Export</button>
+                    </div>
                 </div>
             </div>
-            <div class="form-group">
-                @helper.inputText(form("username"), 'class -> "form-control")
-            </div>
-            <div class="form-group">
-                @helper.inputText(form("password"), 'class -> "form-control")
-            </div>
-            <div class="form-group">
-                @helper.inputText(form("database"), 'class -> "form-control")
-            </div>
+        </div>
+        <script src="@routes.Assets.versioned("libs/jquery/jquery-3.3.1.js")"></script>
+        <script src="@routes.Assets.versioned("libs/jquery/jquery.tabledit.js")"></script>
+        <script src="@routes.Assets.versioned("libs/js-cookie/js.cookie.min.js")"></script>
+            <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script> -->
+        <script src="@routes.Assets.versioned("libs/bootstrap/js/popper.min.js")"></script>
+        <script src="@routes.Assets.versioned("libs/bootstrap/js/bootstrap.min.js")"></script>
+        <script src="@routes.Assets.versioned("libs/gojs/go.js")"></script>
+        <script src="@routes.Assets.versioned("libs/gojs/goIntro.js")"></script>
+        <script src="@routes.Assets.versioned("assets/js/main.js")"></script>
+        <script src="@routes.Assets.versioned("libs/toastr/toastr.min.js")"></script>
+        <script>
+        // Close windows event
+        $(window).on("beforeunload", function () {
+            Cookies.set('modelData', myDiagram.model.toJson());
+        })
+        $('input[type=file]').change(function () {
+            var files = document.getElementById('import').files;
 
+            if (files.length <= 0) {
+                return false;
+            }
 
+            var fr = new FileReader();
 
-            <button>Connect</button>
-        }
-        </section>
-    </div>
+            fr.onload = function (e) {
+                $("#mySavedModel").text(e.target.result);
+            }
 
-
-}
+            fr.readAsText(files.item(0));
+        });
+    </script>
+    </body>
+</html>

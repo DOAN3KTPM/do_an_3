@@ -33,34 +33,7 @@
         "nullable": true,
         "metadata": {}
       },
-      {
-        "name": "publisher",
-        "type": {
-          "type": "struct",
-          "fields": [
-            {
-              "name": "name",
-              "type": "string",
-              "nullable": true,
-              "metadata": {}
-            },
-            {
-              "name": "founded",
-              "type": "integer",
-              "nullable": true,
-              "metadata": {}
-            },
-            {
-              "name": "location",
-              "type": "string",
-              "nullable": true,
-              "metadata": {}
-            }
-          ]
-        },
-        "nullable": true,
-        "metadata": {}
-      },
+
       {
         "name": "author",
         "type": "string",
@@ -68,5 +41,31 @@
         "metadata": {}
       }
     ]
+  },
+  {
+    "name": "publisher",
+    "type": {},
+    "fields": [
+      {
+        "name": "name",
+        "type": "string",
+        "nullable": true,
+        "metadata": {}
+      },
+      {
+        "name": "founded",
+        "type": "integer",
+        "nullable": true,
+        "metadata": {}
+      },
+      {
+        "name": "location",
+        "type": "string",
+        "nullable": true,
+        "metadata": {}
+      }
+    ],
+    "nullable": true,
+    "metadata": {}
   }
 ]
