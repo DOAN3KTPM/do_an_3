@@ -490,9 +490,9 @@ function checkConnectMongodb(input) {
 
 function loadingMedata() {
     let hostname = 'localhost'
-    let dbname = 'test_rl'
+    let dbname = 'test_rl_order_2'
     let port = '27017'
-    let collectionNames = ["classes", "students", "bikes"]
+    let collectionNames = ["orders", "items"]
     $.ajax({
         method: "POST",
         url: "/getMetadataOfCollection",

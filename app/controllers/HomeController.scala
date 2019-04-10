@@ -45,6 +45,12 @@ import java.io._
 
 import scala.util.parsing.json.JSON.parseFull
 
+
+// đạt
+import com.mongodb.casbah.Imports._
+import scala.io.Source
+import net.liftweb.json._
+
 /**
   * This controller creates an `Action` to handle HTTP requests to the
   * application's home page.
@@ -69,9 +75,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   // can remove
   //  private var url: String = _;
-  private var driver: String = "com.mysql.jdbc.Driver";
-  private var username: String = "root";
-  private var password: String = "";
+//  private var driver: String = "com.mysql.jdbc.Driver";
+//  private var username: String = "root";
+//  private var password: String = "";
+  private var dbname: String = "";
   //  private var tables: Array[String] = Array[String]();
 
 
@@ -110,23 +117,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     ) (unlift(Table.unapply))
 
   def index() = Action { implicit request =>
-    //    val url: String = "jdbc:mysql://localhost:3306/web_man_fashion";
-    //    val driver = "com.mysql.jdbc.Driver";
-    //    val username = "root";
-    //    val password = "";
-    //    Class.forName(driver);
-    //    val connection = DriverManager.getConnection(url, username, password);
-    //
-    //    var statement = connection.createStatement;
-    //
-    //    var rs = statement.executeQuery("SHOW TABLES");
-    //    var tables: Array[String] = Array[String]();
-    //    while (rs.next) {
-    //      val tableName = rs.getString(1);
-    //      tables = tables :+ tableName;
-    //    }
-    //    Ok(views.html.index(tables, form))
-
     Ok(views.html.index())
   }
 
@@ -137,7 +127,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     val hostname = request.body.get("hostname").map(_.head).get
     val port = request.body.get("port").map(_.head).get
-    val dbname = request.body.get("dbname").map(_.head).get
+    dbname = request.body.get("dbname").map(_.head).get
     //  List collections ( List[String] )
     var listCollectionNames: List[String] = parseFull(request.body.get("collectionNames")
       .map(_.head).get).get.asInstanceOf[List[String]]
@@ -180,7 +170,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     }
 
     for (collection_name_search <- listCollectionNames) {
-      var unique_columns: List[String] = List("_id")
+
+      // get unique columns
+      var unique_columns: List[String] = getUniqueColumnsOfTable(dbname, collection_name_search)
 
       var results = database.getCollection(collection_name_search).find.limit(10);
       results.subscribe(new Observer[Document] {
@@ -197,7 +189,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
                 if (column_name != "_id") {
-
                   var doc_value = doc.get(column_name).get.asString.getValue
 
                   // find in collumns
@@ -250,7 +241,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
                     var searchValue = database.getCollection(collection_name).find();
                     searchValue.subscribe(new Observer[Document] {
                       override def onNext(doc_search: Document) = {
-
                         // lấy các giá trị của doccument có type là array ([1, 2, 3, 4] => List(1,2,3,4))
                         val value = doc_search.get(collumnName).get;
 
@@ -272,7 +262,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                       }
 
-                      override def onError(e: Throwable) = println(s"Error searchValue!${e}")
+                      override def onError(e: Throwable) = println(s"Error searchValue 1!${e}")
 
                       override def onComplete() = {}
 
@@ -322,7 +312,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                         }
 
-                        override def onError(e: Throwable) = println(s"Error searchValue!${e}")
+                        override def onError(e: Throwable) = println(s"Error searchValue 2!${e}")
 
                         override def onComplete() = {}
 
@@ -340,7 +330,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                           // lấy các giá trị của doccument có type là array ([1, 2, 3, 4] => List(1,2,3,4))
                           val value = doc_search.get(collumnName).get;
-
                           var value_search = ""
                           if (value.isInstanceOf[BsonString]) {
                             value_search = doc_search.get(collumnName).get.asString().getValue
@@ -358,7 +347,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                         }
 
-                        override def onError(e: Throwable) = println(s"Error searchValue!${e}")
+                        override def onError(e: Throwable) = println(s"Error searchValue 3!${e}")
 
                         override def onComplete() = {}
 
@@ -376,7 +365,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           } // end looping others to find relationship
         }
 
-        override def onError(e: Throwable) = println(s"Error Get unique!${e}")
+        override def onError(e: Throwable) = println(s"Error ${unique_columns} Get unique!${e}")
 
         override def onComplete() = {
           Ok(Json.obj("status" -> "200", "message" -> "Success", "tables" -> Json.toJson(tables)))
@@ -385,6 +374,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       })
       Await.ready(results.toFuture, Duration.Inf)
     }
+
+
     Thread.sleep(500)
 
     Ok(Json.obj("status" -> "200", "message" -> "Success", "tables" -> Json.toJson(tables)))
@@ -410,10 +401,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         for (field <- table.fields) {
 
           if (field.name == foreign_key) {
-
             field.relationship.tableNane = table_name
             field.relationship.fieldName = column_name
-            println(field)
           }
         }
 
@@ -466,6 +455,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def getListFields(fields: List[Any], tableName: String, database: MongoDatabase, findRelationship: Boolean = false, pathEmbededDoc: String = path): Unit = {
     var listFields = List[Field]();
     // lấy field đầu tiên làm primarykey
+//    val list_fields_uniqued = getUniqueColumnsOfTable(dbname, tableName)
     var primaryKey = getPrimaryKey(fields)
     // relationship
     var relativeField: String = "";
@@ -519,13 +509,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
             //
             typeFiled = "array";
 
-            //            val elementType = type1.get("elementType").get.asInstanceOf[Map[String, Any]]
-            //
-            //            val sub_fields = elementType.get("fields").get.asInstanceOf[List[Map[String, Any]]]
-            //
-            //            var pathEmbededDocAr = pathEmbededDoc + "," + fieldMap.get("name");
-            //
-            //            getListFields(sub_fields, fieldMap.get("name").get.toString, database, true, pathEmbededDocAr)
+            val elementType = type1.get("elementType").get.asInstanceOf[Map[String, Any]]
+
+            val sub_fields = elementType.get("fields").get.asInstanceOf[List[Map[String, Any]]]
+
+            var pathEmbededDocAr = pathEmbededDoc + "," + fieldMap.get("name");
+
+            getListFields(sub_fields, fieldMap.get("name").get.toString, database, true, pathEmbededDocAr)
 
           }
         }
@@ -554,8 +544,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     addTable(listFields, tableName, primaryKey, relativeField, relativeType);
     addPrimaryKey(primaryKey, tableName)
-
-
   }
 
   def addTable(listFields: Seq[Field], tableName: String, primaryKey: String, relativeField: String, relativeType: String): Unit = {
@@ -563,7 +551,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     //    var table: Table = Table(tableName, primaryKey, listFields, Relationship(relativeField, relativeType))
     var table: Table = Table(tableName, primaryKey, listFields)
-    tables = table :: tables
+
+    // không add các collection có field "oid
+    if (listFields.filter(_.name == "oid").isEmpty) {
+      tables = table :: tables
+    }
+
   }
 
   def addPrimaryKey(primaryKey: String, tableName: String): Unit = {
@@ -576,18 +569,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def getPrimaryKey(fields: List[Any]): String = {
 
-    var primaryKey: String = "";
+    var primaryKey: String = "_id";
 
     fields.foreach(field => {
       var fieldMap: Map[String, Any] = field.asInstanceOf[Map[String, Any]];
 
-      // type of field
-      var typeFiled: String = "";
 
       // kiểm tra type của field
       if (fieldMap.get("type").get != "struct" &&
         fieldMap.get("type").get != "array" &&
-        fieldMap.get("name").get != "_id") {
+        fieldMap.get("name").get != "_id" &&
+        fieldMap.get("type").get.isInstanceOf[String]) {
+
         primaryKey = fieldMap.get("name").get.toString;
 
         return primaryKey;
@@ -595,8 +588,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
     });
-    primaryKey
 
+    primaryKey
   }
 
   def getData(primaryKey: String, pathEmbededDoc: String, database: MongoDatabase): List[String] = {
@@ -742,5 +735,139 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def dropIndex[T](xs: List[T], n: Int) = {
     val (l1, l2) = xs splitAt n
     l1 ::: (l2 drop 1)
+  }
+
+  //  đạt ===============================================================================
+  var t1 = System.nanoTime()
+
+  def getElement(elem: String, json: JValue): List[String] = for {
+    JObject(child) <- json
+    JField(`elem`, JString(value)) <- child
+    // this does not return the expected result
+    // JField("username", JString(value)) <- child // this returns the expected result
+  } yield value
+
+  def getName(json: JValue, i: Int): String = {
+    //(jsonData \ "fields"(0) \ "name" -> JString(_id)
+    try {
+      var value = (json \ "fields") (i) \ "name"
+      var name = value.toString.replace("JString", "")
+        .replaceAll("[(]", "")
+        .replaceAll("[)]", "")
+      return name
+    }
+    catch {
+      case unknownError: UnknownError =>
+    }
+    return null
+  }
+
+  def getType(json: JValue, i: Int): String = {
+    try {
+      var value = (json \ "fields") (i) \ "type"
+      var name = value.toString.replace("JString", "")
+        .replaceAll("[(]", "")
+        .replaceAll("[)]", "")
+      if (name.contains(",array,")) {
+        name = "array"
+      } else if (name.contains(",struct,")) {
+        name = "struct"
+      }
+      return name
+    }
+    catch {
+      case unknownError: UnknownError =>
+    }
+    return null
+  }
+
+  def countElement(regex1: String, regex2: String, json: JValue): Int = {
+    /*
+        count("fields", "name", json)
+        list = getElement("name",json).length = 8
+        (jsonData \ "fields")(0) \ "name" -> JString(_id) != JNothing
+        => count = 5
+        6,7,8 wrong -> catch exceptions
+    */
+    var count = 0
+    var list = getElement(regex2, json).length
+    for (i <- 0 to list - 1) {
+      try {
+        if (((json \ regex1) (i) \ regex2) != JNothing) {
+          count += 1
+        }
+      }
+      catch {
+        case unknown =>
+      } //do nothing
+    }
+    return count
+  }
+
+  def getUniqueColumnsOfTable(db: String, collection: String): List[String] = {
+
+    val re: String = "\"type\""
+
+    var database1 = "\"" + db + ":" + collection + "\""
+    val a: String = "\"database\" : " + database1 + ",\n\"name\" : \"" + collection + "\"" + ",\n" + "\"type\""
+    val url = db + "." + collection
+    val sparkSession = SparkSession.builder()
+      .master("local")
+      .appName("MongoSpark")
+      .config("spark.mongodb.input.uri", "mongodb://127.0.0.1:27017/" + url)
+      .config("spark.mongodb.output.uri", "mongodb://127.0.0.1:27017/" + url)
+      .getOrCreate()
+    val df = MongoSpark.load(sparkSession) // Uses the SparkSession
+    val ac = df.schema
+    val ac_tree = ac.treeString.replaceFirst("root", collection)
+    var av = ac.json
+    //println(av)
+    val jsonString = ac.prettyJson
+    val json_new = jsonString.replaceFirst(re, a)
+    //        println(json_new)
+    //        val pw = new PrintWriter(new File("D:\\DoAn3\\Json\\Output_"+collection+".json" ))
+    //        pw.write(json_new)
+    //        pw.close
+
+
+    //        val lines = Source.fromFile("D:\\DoAn3\\Json\\Output_book.json").mkString
+    var jsonData = net.liftweb.json.parse(json_new)
+    var num = countElement("fields", "name", jsonData)
+
+    var list_all_name = getElement("name", jsonData)
+    var list_type = getElement("type", jsonData)
+    var list_new: List[String] = List()
+    var list_name: List[String] = List()
+    for (i <- 0 to num - 1) {
+      list_new = getName(jsonData, i) + ":" + getType(jsonData, i) :: list_new
+    }
+    list_new = list_new.filterNot((a: String) => {
+      a.contains("array")
+    })
+    var list_find: List[String] = List()
+    var list_key: List[String] = List()
+    for (i <- 0 to list_new.length - 1) {
+      var temp = list_new(i).substring(0, list_new(i).indexOf(":"))
+      if (temp != "_id") {
+        list_find = temp :: list_find
+      } else {
+        list_key = temp :: list_key
+      }
+    }
+    var database2 = getElement("database", jsonData)
+    val db1 = database2(0).substring(0, database2(0).indexOf(":"))
+    val collection1 = database2(0).substring(database2(0).indexOf(":") + 1, database2(0).length)
+    //connect to database
+    val client: MongoClient = MongoClient()
+    val mongoConn = MongoConnection()
+    val mongoColl = mongoConn(db1)(collection1)
+    val size = mongoColl.size
+    for (i <- 0 to list_find.length - 1) {
+      var tam = mongoColl.distinct(list_find(i)).size
+      if (tam == size) {
+        list_key = list_find(i) :: list_key
+      }
+    }
+    list_key
   }
 }
