@@ -17,7 +17,7 @@ function init() {
     myDiagram.addDiagramListener("ObjectDoubleClicked", function (ev) {
         let data = ev.subject.part.data
         switch (data.category) {
-            case 'MONGODB': {console.log(data)
+            case 'MONGODB': {
                 let hostname = data.hostname ? data.hostname : 'localhost'
                 let port = data.port ? data.port : '27017'
                 let collectionNames = data.collections ? data.collections : []
@@ -35,44 +35,52 @@ function init() {
                     keyLink = modelLink[0].from
                 }
 
-                // 
+                //
                 let collectionNames = new Array()
+                let hostname, dbname, port = "";
                 if (keyLink) {
-                    let dataLink = models.findNodeDataForKey(keyLink);
+                    var dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
+
+                    hostname = dataLink.hostname
+                    dbname = dataLink.dbname
+                    port = dataLink.port
                 }
                 // send host name port collectionName to query
-                console.log(collectionNames)
+                // get meta data
+
+
+
                 // send ajax
-                let dataCollections = [
-                    {
-                        name: "sinh vien",
-                        fields: [
-                        {
-                            name: "MSSV",
-                            type: "int",
-                        },
-                        {
-                            name: "ho_ten",
-                            type: "String",
-                        }
-                        ]
-                    },
-                    {
-                        name: "lop",
-                        fields: [
-                        {
-                            name: "ma_lop",
-                            type: "int",
-                        },
-                        {
-                            name: "ten_lop",
-                            type: "String",
-                        }
-                        ]
-                    }
-                ];
-                loadSQLModal(dataCollections)
+                // let dataCollections = [
+                //     {
+                //         name: "sinh vien",
+                //         fields: [
+                //             {
+                //                 name: "MSSV",
+                //                 type: "int",
+                //             },
+                //             {
+                //                 name: "ho_ten",
+                //                 type: "String",
+                //             }
+                //         ]
+                //     },
+                //     {
+                //         name: "lop",
+                //         fields: [
+                //             {
+                //                 name: "ma_lop",
+                //                 type: "int",
+                //             },
+                //             {
+                //                 name: "ten_lop",
+                //                 type: "String",
+                //             }
+                //         ]
+                //     }
+                // ];
+                loadSQLModal(hostname, dbname, port, collectionNames)
                 break;
             }
         }
@@ -148,7 +156,7 @@ function init() {
     //         // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
     //         $(go.Panel, "Auto",
     //             $(go.Picture,
-    //                 {desiredSize: new go.Size(40, 40), source: "images/mongodb.png"}),
+    //                 {desiredSize: new go.Size(40, 40), source: "assets/assets/images/mongodb.png"}),
     //         ),
     //         // four named ports, one on each side:
     //         makePort("T", go.Spot.Top, false, true),
@@ -161,7 +169,7 @@ function init() {
             // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "assets/assets/images/mongodb.png" })
+                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/mongodb.png"}),
             ),
             // four named ports, one on each side:
             makePort("T", go.Spot.Top, false, true),
@@ -173,7 +181,7 @@ function init() {
         $(go.Node, "Spot", nodeStyle(),
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "assets/assets/images/sql.png" })
+                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/sql.png"})
             ),
             makePort("T", go.Spot.Top, false, true),
             makePort("L", go.Spot.Left, true, true),
@@ -185,7 +193,7 @@ function init() {
         $(go.Node, "Spot", nodeStyle(),
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "assets/assets/images/csv.png" })
+                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/csv.png"}),
             ),
 
             makePort("T", go.Spot.Top, false, true),
@@ -198,7 +206,7 @@ function init() {
         $(go.Node, "Spot", nodeStyle(),
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "assets/assets/images/db.png" })
+                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/db.png"})
             ),
 
 
@@ -230,16 +238,16 @@ function init() {
             },
             new go.Binding("points").makeTwoWay(),
             $(go.Shape,  // the highlight shape, normally transparent
-                { isPanelMain: true, strokeWidth: 8, stroke: "transparent", name: "HIGHLIGHT" }),
+                {isPanelMain: true, strokeWidth: 8, stroke: "transparent", name: "HIGHLIGHT"}),
             $(go.Shape,  // the link path shape
-                { isPanelMain: true, stroke: "gray", strokeWidth: 2 }),
+                {isPanelMain: true, stroke: "gray", strokeWidth: 2}),
             $(go.Shape,  // the arrowhead
-                { toArrow: "standard", stroke: null, fill: "gray" }),
+                {toArrow: "standard", stroke: null, fill: "gray"}),
             $(go.Panel, "Auto",  // the link label, normally not visible
-                { visible: false, name: "LABEL", segmentIndex: 2, segmentFraction: 0.5 },
+                {visible: false, name: "LABEL", segmentIndex: 2, segmentFraction: 0.5},
                 new go.Binding("visible", "visible").makeTwoWay(),
                 $(go.Shape, "RoundedRectangle",  // the label shape
-                    { fill: "#F8F8F8", stroke: null }),
+                    {fill: "#F8F8F8", stroke: null}),
                 $(go.TextBlock, "Yes",  // the label
                     {
                         textAlign: "center",
@@ -271,16 +279,17 @@ function init() {
                 "animationManager.duration": 800, // slightly longer than default (600ms) animation
                 nodeTemplateMap: myDiagram.nodeTemplateMap,  // share the templates used by myDiagram
                 model: new go.GraphLinksModel([  // specify the contents of the Palette
-                    { category: "MONGODB", text: "MONGODB" },
+                    {category: "MONGODB", text: "MONGODB"},
                     // {category: "Step", text: "Step"},
-                    { category: "SQL", text: "SQL", },
-                    { category: "CSV", text: "CSV" },
+                    {category: "SQL", text: "SQL",},
+                    {category: "CSV", text: "CSV"},
                 ])
             });
 
     // The following code overrides GoJS focus to stop the browser from scrolling
     // the page when either the Diagram or Palette are clicked or dragged onto.
     myDiagram.model = go.Model.fromJson(JSON.parse(Cookies.get('modelData')));
+
     function customFocus() {
         var x = window.scrollX || window.pageXOffset;
         var y = window.scrollY || window.pageYOffset;
@@ -315,7 +324,7 @@ function save() {
 }
 
 function download(data, filename, type) {
-    var file = new Blob([data], { type: type });
+    var file = new Blob([data], {type: type});
     if (window.navigator.msSaveOrOpenBlob) // IE10+
         window.navigator.msSaveOrOpenBlob(file, filename);
     else { // Others
@@ -348,6 +357,7 @@ function makeSVG() {
         obj.replaceChild(svg, obj.children[0]);
     }
 }
+
 $('input[type=file]').change(function () {
     var files = document.getElementById('import').files;
 
@@ -370,9 +380,8 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
     $('#mongodbModal').find('#port-mg').val(port)
     $('#mongodbModal').find('.save').attr('data-key', key)
     let html = "";
-    console.log(collectionNames)
-     for (var name of collectionNames) {
-            html += `<div class="collection">
+    for (var name of collectionNames) {
+        html += `<div class="collection">
                 <input type="checkbox" name="collections" value="${name}" id="${name}" checked> <label for="${name}">${name}</label>
             </div>`
     }
@@ -382,52 +391,64 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
 }
 
 // load sql modal
-function loadSQLModal(dataCollections) {
-    if(dataCollections.length > 0) {
-        var html = ""
-        for(let table of dataCollections) {
-            html += `
+function loadSQLModal(hostname, dbname, port, collectionNames) {
+
+    $.ajax({
+        method: "POST",
+        url: "/getMetadataOfCollection",
+        data: {
+            hostname,
+            dbname,
+            port,
+            collectionNames: JSON.stringify(collectionNames)
+        },
+        success: function (data) {
+
+            let dataCollections = data.tables
+
+            if (dataCollections.length > 0) {
+                var html = ""
+                for (let table of dataCollections) {
+                    html += `
 <div class="table">
 <h3>${table.name}</h3>
 <table class="table table-bordered">
   <thead>
     <tr>
-    <th>#</th>
+    <th>Primary key <i class="fas fa-key"></i></th>
       <th scope="col">Field name</th>
       <th scope="col">Type</th>
     </tr>
   </thead>
   <tbody>
-  ` ;
-    let i = 0;
-   for(let field of  table.fields) {
-    i++
-    html += `<tr>
-    <th scope="row">${i}</th>
+  `;
+                    let i = 0;
+                    for (let field of  table.fields) {
+                        i++
+                        html += `<tr>
+    <th scope="row"><input type="checkbox" id="primary-key" value="1"/></th>
       <td>${field.name}</td>
       <td>${field.type}</td>
     </tr>`
-   }
+                    }
 
 
-   html +=  `
+                    html += `
   </tbody>
 </table>
 </div>
 
             `
-        }
-    }
-
-$('#sqlModal .modal-body').html(html)
-$('.table').Tabledit({
-                removeButton: false,
-                columns: {
-                    identifier: [0, 'id'],
-                    editable: [[1, 'Field name'],[2, 'Type']]
                 }
-            });
-    $('#sqlModal').modal('show');
+            }
+
+            $('#sqlModal .modal-body').html(html)
+
+            $('#sqlModal').modal('show');
+        }
+    })
+
+
 
 }
 
@@ -442,17 +463,18 @@ function saveConfigureMongodb(input) {
     let port = parent.find('#port-mg').val()
     let collectionElements = parent.find('[name="collections"]');
     let collectionNames = new Array();
-    for(let element of collectionElements) {
-            collectionNames.push($(element).val())
+    for (let element of collectionElements) {
+        collectionNames.push($(element).val())
     }
     let nodeData = myDiagram.model.findNodeDataForKey(key);
 
     nodeData.hostname = hostname
     nodeData.port = port
     nodeData.dbname = dbname
-     nodeData.collectionNames = collectionNames
+    nodeData.collectionNames = collectionNames
     $('#mongodbModal').modal('hide');
 }
+
 function checkConnectMongodb(input) {
     let parent = $(input).parents('#mongodbModal')
     let hostname = parent.find('#hostname-mg').val()
@@ -460,52 +482,39 @@ function checkConnectMongodb(input) {
     let port = parent.find('#port-mg').val()
     $.ajax({
         method: "POST",
-      url: "/checkConnectionMGDB",
-      data: {
-        hostname,
-        dbname,
-        port
-      },
-      success: function(data) {
-        console.log(data)
-        let html = "";
-        if (data.status == 500) {
-            toastr.error('Kết nối thất bại!')
-        }else{
-            var collectionNames = data.collectionNames
-            console.log(collectionNames)
-            let html = ''
-            for (var name of collectionNames) {
-                html += `<div class="collection">
-                    <input type="checkbox" name="collections" value="${name}" id="${name}"> <label for="${name}">${name}</label>
-                </div>`
-            }
-            $('.collections').html(html);
-
-            toastr.success('Kết nối thành công!')
-        }
-        }
-    })
-}
-
-function loadingMedata() {
-    let hostname = 'localhost'
-    let dbname = 'test_rl_order_2'
-    let port = '27017'
-    let collectionNames = ["orders", "items"]
-    $.ajax({
-        method: "POST",
-        url: "/getMetadataOfCollection",
+        url: "/checkConnectionMGDB",
         data: {
             hostname,
             dbname,
-            port,
-            collectionNames: JSON.stringify(collectionNames)
+            port
         },
-        success: function(data) {
+        success: function (data) {
             console.log(data)
+            let html = "";
+            if (data.status == 500) {
+                toastr.error('Kết nối thất bại!')
+            } else {
+                var collectionNames = data.collectionNames
+                console.log(collectionNames)
+                let html = ''
+                for (var name of collectionNames) {
+                    html += `<div class="collection">
+                                <input type="checkbox" name="collections" value="${name}" id="${name}"> <label for="${name}">${name}</label>
+                            </div>`
+                }
+                $('.collections').html(html)
+
+                toastr.success('Kết nối thành công!')
+            }
         }
     })
+
+
+}
+
+
+function loadingMedata() {
+
 }
 
  
