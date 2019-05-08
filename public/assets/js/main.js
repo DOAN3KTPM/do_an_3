@@ -26,12 +26,10 @@ function init() {
                 let keyLink = null;
                 if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
                     keyLink = modelLink[0].from
-                }
-
-                //
-                let collectionNames = new Array()
-                let hostname, dbname, port = "";
-                if (!keyLink) {
+                     //
+                    let collectionNames = new Array()
+                    let hostname, dbname, port = "";
+             
                     var dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
 
@@ -56,12 +54,10 @@ function init() {
                 let keyLink = null;
                 if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
                     keyLink = modelLink[0].from
-                }
-
-                //
+                     //
                 let collectionNames = new Array()
                 let hostname, dbname, port = "";
-                if (keyLink) {
+
                     var dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
 
@@ -187,34 +183,6 @@ function init() {
             makePort("B", go.Spot.Bottom, true, false)
         ));
 
-    myDiagram.nodeTemplateMap.add("CSV",
-        $(go.Node, "Spot", nodeStyle(),
-            $(go.Panel, "Auto",
-                $(go.Picture,
-                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/csv.png"}),
-            ),
-
-            makePort("T", go.Spot.Top, false, true),
-            makePort("L", go.Spot.Left, true, true),
-            makePort("R", go.Spot.Right, true, true),
-            makePort("B", go.Spot.Bottom, true, false)
-        ));
-
-    myDiagram.nodeTemplateMap.add("Comment",
-        $(go.Node, "Spot", nodeStyle(),
-            $(go.Panel, "Auto",
-                $(go.Picture,
-                    {desiredSize: new go.Size(40, 40), source: "assets/assets/images/db.png"})
-            ),
-
-
-            makePort("T", go.Spot.Top, false, true),
-            makePort("L", go.Spot.Left, true, true),
-            makePort("R", go.Spot.Right, true, true),
-            makePort("B", go.Spot.Bottom, true, false)
-        ));
-
-
     // replace the default Link template in the linkTemplateMap
     myDiagram.linkTemplate =
         $(go.Link,  // the whole link panel
@@ -278,9 +246,7 @@ function init() {
                 nodeTemplateMap: myDiagram.nodeTemplateMap,  // share the templates used by myDiagram
                 model: new go.GraphLinksModel([  // specify the contents of the Palette
                     {category: "MONGODB", text: "MONGODB"},
-                    // {category: "Step", text: "Step"},
-                    {category: "SQL", text: "SQL",},
-                    {category: "CSV", text: "CSV"},
+                    {category: "SQL", text: "SQL",}
                 ])
             });
 
