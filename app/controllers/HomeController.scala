@@ -75,9 +75,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   // can remove
   //  private var url: String = _;
-//  private var driver: String = "com.mysql.jdbc.Driver";
-//  private var username: String = "root";
-//  private var password: String = "";
+  //  private var driver: String = "com.mysql.jdbc.Driver";
+  //  private var username: String = "root";
+  //  private var password: String = "";
   private var dbname: String = "";
   //  private var tables: Array[String] = Array[String]();
 
@@ -375,7 +375,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       Await.ready(results.toFuture, Duration.Inf)
     }
 
-
+    setPrimaryKeyForTables()
     Thread.sleep(500)
 
     Ok(Json.obj("status" -> "200", "message" -> "Success", "tables" -> Json.toJson(tables)))
@@ -390,6 +390,26 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         table.primaryKey = column_name
       }
     }
+  }
+
+  //
+  def setPrimaryKeyForTables(): Unit = {
+    tables.foreach((table: Table) => {
+
+
+      var list_foreign_names = List[String]();
+      tables.foreach((table: Table) => {
+
+        table.fields.foreach((field: Field) => {
+          list_foreign_names = list_foreign_names :+ field.relationship.fieldName;
+        })
+      })
+
+
+      if (list_foreign_names.contains(table.primaryKey)) {
+        table.primaryKey = "_id"
+      }
+    })
   }
 
   //
@@ -455,7 +475,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def getListFields(fields: List[Any], tableName: String, database: MongoDatabase, findRelationship: Boolean = false, pathEmbededDoc: String = path): Unit = {
     var listFields = List[Field]();
     // lấy field đầu tiên làm primarykey
-//    val list_fields_uniqued = getUniqueColumnsOfTable(dbname, tableName)
+    //    val list_fields_uniqued = getUniqueColumnsOfTable(dbname, tableName)
     var primaryKey = getPrimaryKey(fields)
     // relationship
     var relativeField: String = "";
@@ -560,7 +580,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def addPrimaryKey(primaryKey: String, tableName: String): Unit = {
-
     primaryKeyTabels = Map(
       "table_name" -> tableName,
       "primaryKey" -> primaryKey,
@@ -568,7 +587,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def getPrimaryKey(fields: List[Any]): String = {
-
     var primaryKey: String = "_id";
 
     fields.foreach(field => {

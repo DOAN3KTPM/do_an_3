@@ -9,7 +9,6 @@
         <link rel="stylesheet" href="@routes.Assets.versioned("assets/css/style.css")">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     </head>
-    <button onclick="loadingMedata()"> click here</button>
     <div class="content">
         <div class="slider-wrapper">
         You can change
@@ -182,6 +181,7 @@
         <script src="https://gojs.net/latest/extensions/Figures.js"></script>
         <script src="@routes.Assets.versioned("libs/toastr/toastr.min.js")"></script>
         <script>
+            var data_tables;
     // Close windows event
     $(window).on("beforeunload", function () {
         Cookies.set('modelData', myDiagram.model.toJson());
@@ -207,131 +207,11 @@
 
     // showModel();  // show the diagram's initial model
     function showRelationship() {
-        var data = {
-            "status": "200",
-            "message": "Success",
-            "tables": [{
-                "name": "book",
-                "primaryKey": "author",
-                "fields": [{
-                    "name": "_id",
-                    "type": "",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "author",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 5, "max": 25},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "language",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 4, "max": 8},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "published_date",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 9, "max": 9},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "publisher",
-                    "type": "struct",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "title",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 5, "max": 24},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "publisher", "type": "1_1"}
-            }, {
-                "name": "publisher",
-                "primaryKey": "name",
-                "fields": [{
-                    "name": "name",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 13, "max": 15},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "founded",
-                    "type": "integer",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "location",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 2, "max": 2},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "publisher", "type": "1_1"}
-            }, {
-                "name": "users",
-                "primaryKey": "__v",
-                "fields": [{
-                    "name": "__v",
-                    "type": "integer",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "_id",
-                    "type": "",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "createdAt",
-                    "type": "timestamp",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "email",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "enable",
-                    "type": "boolean",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "name",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 4, "max": 13},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "password",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 60, "max": 60},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "updatedAt",
-                    "type": "timestamp",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "", "type": ""}
-            }]
-        };
 
         var nodeData = new Array();
-        for (let table of data.tables) {
+        var linkData = new Array();
+        // data_tables  global variable
+        for (let table of data_tables) {
 
             var fields = new Array();
             for (let field of table.fields) {
@@ -340,21 +220,30 @@
                 fields.push(
                         {
                             name: field.name,
-                            rename: "0"
-                            ,
-                            figure: table.primaryKey == field.name ? "Key" : ""
+                            rename: "0",
+                            figure: table.primaryKey == field.name ? "Key" : "Diamond",
+                            color: table.primaryKey == field.name ? "#ffc107" : "#7FBA00",
                         }
                 )
+                // check if exist relationship
+                if(field.relationship.tableName != "" && field.relationship.fieldName != "") {
+                    linkData.push({
+                        from: table.name,
+                        fromPort: field.name,
+                        to: field.relationship.tableName,
+                        toPort: field.relationship.fieldName
+                    })
+                }
+
             }
 
             nodeData.push({
                         key: table.name,
                         fields: fields,
-                        loc: "0 0"
                     }
             )
-        }
 
+        }
         myRelate.model =
                 go.Model.fromJson({
                     copiesArrays: true,
@@ -362,11 +251,7 @@
                     linkFromPortIdProperty: "fromPort",
                     linkToPortIdProperty: "toPort",
                     nodeDataArray: nodeData,
-                    linkDataArray: [
-                        {from: "Record1", fromPort: "field1", to: "Record2", toPort: "fieldA", figure: "Ellipse"},
-                        {from: "Record1", fromPort: "field2", to: "Record2", toPort: "fieldD"},
-                        {from: "Record1", fromPort: "fieldThree", to: "Record2", toPort: "fieldB"}
-                    ]
+                    linkDataArray: linkData
                 })
     }
 </script>

@@ -20,7 +20,7 @@ function init() {
             case 'MONGODB': {
                 let hostname = data.hostname ? data.hostname : 'localhost'
                 let port = data.port ? data.port : '27017'
-                let collectionNames = data.collections ? data.collections : []
+                let collectionNames = data.collectionNames ? data.collectionNames : []
                 loadMongodbModal(hostname, port, data.key, collectionNames)
                 break;
             }
@@ -403,7 +403,7 @@ function loadSQLModal(hostname, dbname, port, collectionNames) {
             collectionNames: JSON.stringify(collectionNames)
         },
         success: function (data) {
-
+            data_tables = data.tables // global
             let dataCollections = data.tables
 
             if (dataCollections.length > 0) {
