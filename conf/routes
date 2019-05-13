@@ -8,6 +8,7 @@ GET     /                                   controllers.HomeController.index
 POST     /getMetadataOfCollection            controllers.HomeController.getMetadataOfCollection
 #GET     /metadata                           controllers.MetaDataController.index
 POST     /checkConnectionMGDB                           controllers.MetaDataController.checkConnectionMGDB
+POST     /start                              controllers.HomeController.start
 #GET     /schemajson                           controllers.SchemaJsonController.index
 #GET     /specialcolumn                           controllers.SpecialCollumnController.index
 #POST    /getMetaTable               controllers.HomeController.getMetaTable
