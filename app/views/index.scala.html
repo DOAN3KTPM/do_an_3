@@ -209,6 +209,7 @@
 
         var nodeData = new Array();
         var linkData = new Array();
+        var dataName = $('#dbname-mg').val();
         // data_tables  global variable
         for (let table of data_tables) {
 
@@ -219,6 +220,7 @@
                 fields.push(
                         {
                             name: field.name,
+                            type: field.type,
                             rename: "0",
                             figure: table.primaryKey == field.name ? "Key" : "Diamond",
                             color: table.primaryKey == field.name ? "#ffc107" : "#7FBA00",
@@ -237,6 +239,7 @@
             }
 
             nodeData.push({
+                        dbname: dataName,
                         key: table.name,
                         fields: fields,
                     }
