@@ -84,7 +84,7 @@ Diagram Model saved in JSON format:
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Configure connection</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Configure connection mongodb</h5>
                 <button aria-label="Close" class="close" data-dismiss="modal" type="button">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -113,6 +113,45 @@ Diagram Model saved in JSON format:
                 <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
                 <button class="btn btn-primary save" data-key onclick="saveConfigureMongodb(this)" type="button">Save changes</button>
                 <button class="btn btn-danger check-connect" data-key onclick="checkConnectMongodb(this)" type="button">Check connection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal mysql -->
+<div aria-hidden="true" aria-labelledby="exampleModalLabel" class="modal fade" id="mysqlModal" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Configure connection mysql</h5>
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- hostname -->
+                <div class="form-group">
+                    <label for="hostname-mg">Host name() or IP address(es)</label>
+                    <input class="form-control" id="hostname-mg" type="text">
+                </div>
+                <!-- port -->
+                <div class="form-group">
+                    <label for="port-mg">Port</label>
+                    <input class="form-control" id="port-mg" type="text">
+                </div>
+                <!-- db-name -->
+                <div class="form-group">
+                    <label for="dbname-mg">Database Name</label>
+                    <input class="form-control" id="dbname-mg" type="text">
+                </div>
+
+                <div class="collections"></div>
+                <div id="msg"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
+                <button class="btn btn-primary save" data-key onclick="saveConfigureMongodb(this)" type="button">Save changes</button>
+                <button class="btn btn-danger check-connect" data-key onclick="checkConnectMysql(this)" type="button">Check connection</button>
             </div>
         </div>
     </div>

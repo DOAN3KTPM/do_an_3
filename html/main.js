@@ -36,10 +36,10 @@ function init() {
 
                 // 
                 let collectionNames = new Array()
-                if (keyLink) {
+              
                     let dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
-                }
+                
                 // send host name port collectionName to query
                 console.log(collectionNames)
                 // send ajax
@@ -361,18 +361,18 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
 }
 
 function loadMysqlModal(hostname, port, key, collectionNames) {
-    $('#mongodbModal').find('#hostname-mg').val(hostname)
-    $('#mongodbModal').find('#port-mg').val(port)
-    $('#mongodbModal').find('.save').attr('data-key', key)
+    $('#mysqlModal').find('#hostname-mg').val(hostname)
+    $('#mysqlModal').find('#port-mg').val(port)
+    $('#mysqlModal').find('.save').attr('data-key', key)
     let html = "";
      for (var name of collectionNames) {
             html += `<div class="collection">
                 <input type="checkbox" name="collections" value="${name}" id="${name}" checked> <label for="${name}">${name}</label>
             </div>`
     }
-    $('#mongodbModal .collections').html(html)  
+    $('#mysqlModal .collections').html(html)  
 
-    $('#mongodbModal').modal('show');
+    $('#mysqlModal').modal('show');
 
 }
 
@@ -489,3 +489,23 @@ $('.collections').html(html)
     
 }
 
+function checkConnectMysql(input) {
+    let parent = $(input).parents('#mysqlModal')
+    let hostname = parent.find('#hostname-mg').val()
+    let dbname = parent.find('#dbname-mg').val()
+    let port = parent.find('#port-mg').val()
+    
+ var data = {
+    collectionNames : ['123',  '123']
+    }
+    var collectionNames = data.collectionNames
+    console.log(collectionNames)
+    let html = ''
+    for (var name of collectionNames) {
+        html += `<div class="collection">
+            <input type="checkbox" name="collections" value="${name}" id="${name}"> <label for="${name}">${name}</label>
+        </div>`
+}
+$('.collections').html(html)  
+    
+}

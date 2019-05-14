@@ -356,18 +356,18 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
 
 //  load mongodb modal
 function loadMysqlModal(hostname, port, key, collectionNames) {
-    $('#mongodbModal').find('#hostname-mg').val(hostname)
-    $('#mongodbModal').find('#port-mg').val(port)
-    $('#mongodbModal').find('.save').attr('data-key', key)
+    $('#mysqlModal').find('#hostname-mg').val(hostname)
+    $('#mysqlModal').find('#port-mg').val(port)
+    $('#mysqlModal').find('.save').attr('data-key', key)
     let html = "";
     for (var name of collectionNames) {
         html += `<div class="collection">
                 <input type="checkbox" name="collections" value="${name}" id="${name}" checked> <label for="${name}">${name}</label>
             </div>`
     }
-    $('#mongodbModal .collections').html(html)
+    $('#mysqlModal .collections').html(html)
 
-    $('#mongodbModal').modal('show');
+    $('#mysqlModal').modal('show');
 }
 
 // load sql modal
@@ -455,6 +455,29 @@ function saveConfigureMongodb(input) {
     $('#mongodbModal').modal('hide');
 }
 
+function saveConfigureMysql(input) {
+
+    let key = $(input).attr('data-key')
+
+    let parent = $(input).parents('#mysqlModal')
+    let hostname = parent.find('#hostname-mg').val()
+    let dbname = parent.find('#dbname-mg').val()
+
+    let port = parent.find('#port-mg').val()
+    let collectionElements = parent.find('[name="collections"]');
+    let collectionNames = new Array();
+    for (let element of collectionElements) {
+        collectionNames.push($(element).val())
+    }
+    let nodeData = myDiagram.model.findNodeDataForKey(key);
+
+    nodeData.hostname = hostname
+    nodeData.port = port
+    nodeData.dbname = dbname
+    nodeData.collectionNames = collectionNames
+    $('#mysqlModal').modal('hide');
+}
+
 function checkConnectMongodb(input) {
     let parent = $(input).parents('#mongodbModal')
     let hostname = parent.find('#hostname-mg').val()
@@ -498,3 +521,39 @@ function loadingMedata() {
 }
 
  
+function checkConnectMysql(input) {
+    let parent = $(input).parents('#mysqlModal')
+    let hostname = parent.find('#hostname-mg').val()
+    let dbname = parent.find('#dbname-mg').val()
+    let port = parent.find('#port-mg').val()
+    $.ajax({
+        method: "POST",
+        url: "/checkConnectionMGDB",
+        data: {
+            hostname,
+            dbname,
+            port
+        },
+        success: function (data) {
+            console.log(data)
+            let html = "";
+            if (data.status == 500) {
+                toastr.error('Kết nối thất bại!')
+            } else {
+                var collectionNames = data.collectionNames
+                console.log(collectionNames)
+                let html = ''
+                for (var name of collectionNames) {
+                    html += `<div class="collection">
+                                <input type="checkbox" name="collections" value="${name}" id="${name}"> <label for="${name}">${name}</label>
+                            </div>`
+                }
+                $('.collections').html(html)
+
+                toastr.success('Kết nối thành công!')
+            }
+        }
+    })
+
+
+}
