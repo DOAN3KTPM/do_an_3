@@ -64,7 +64,7 @@ case class Length(min: Int, max: Int)
 
 case class Field(var name: String, `type`: String, nullable: String, length: Length, relationship: RelationshipField)
 
-case class Table(var name: String, var primaryKey: String, fields: Seq[Field])
+case class Table(var name: String, var primaryKey: String, fields: Seq[Field], var path: String)
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) with I18nSupport {
@@ -85,7 +85,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   private var tables = List[Table]();
   private var primaryKeyTabels = List[Map[String, String]]();
-  private var path = "";
 
   implicit var lengthWrites: Writes[Length] = (
     (JsPath \ "min").write[Int] and
@@ -113,7 +112,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   implicit var tableWrites: Writes[Table] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "primaryKey").write[String] and
-      (JsPath \ "fields").write[Seq[Field]]
+      (JsPath \ "fields").write[Seq[Field]] and
+        (JsPath \ "path").write[String]
     //      (JsPath \ "relationship").write[Relationship]
     ) (unlift(Table.unapply))
 
@@ -162,10 +162,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       // loop collections from json
       for (table <- json) {
         // name of collection
-        path = table.get("name").get.toString
+        val path = table.get("name").get.toString
         val fields = table.get("fields").get.asInstanceOf[List[Field]]
 
-        getListFields(fields, table.get("name").get.toString, database)
+        getListFields(fields, table.get("name").get.toString, database, path)
       }
       sparkSession.close()
     }
@@ -473,7 +473,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
 
   // get fields of specific table
-  def getListFields(fields: List[Any], tableName: String, database: MongoDatabase, findRelationship: Boolean = false, pathEmbededDoc: String = path): Unit = {
+  def getListFields(fields: List[Any], tableName: String, database: MongoDatabase, pathEmbededDoc: String, findRelationship: Boolean = false): Unit = {
     var listFields = List[Field]();
     // lấy field đầu tiên làm primarykey
     //    val list_fields_uniqued = getUniqueColumnsOfTable(dbname, tableName)
@@ -481,19 +481,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // relationship
     var relativeField: String = "";
     var relativeType: String = "";
-    //    if (findRelationship) {
-    //      var data = getData(primaryKey, pathEmbededDoc, database);
-    //
-    //      var listDuplicates: List[String] = data.diff(data.distinct).distinct;
-    //
-    //      if (listDuplicates.size == 0) {
-    //        relativeField = tableName;
-    //        relativeType = "1_1"
-    //      } else {
-    //        relativeField = tableName;
-    //        relativeType = "n_1"
-    //      }
-    //    }
+
+
     fields.foreach(field => {
       var fieldMap: Map[String, Any] = field.asInstanceOf[Map[String, Any]];
       // type of field
@@ -516,9 +505,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
             val sub_fields = type1.get("fields").get.asInstanceOf[List[Map[String, Any]]]
 
-            var pathEmbededDocAr = pathEmbededDoc + "," + fieldMap.get("name").get.toString;
+//            path_table = pathEmbededDoc + "," + fieldMap.get("name").get.toString;
 
-            getListFields(sub_fields, fieldMap.get("name").get.toString, database, true, pathEmbededDocAr)
+            getListFields(sub_fields, fieldMap.get("name").get.toString, database, pathEmbededDoc, true)
 
             // nếu type of field là "array"
           }
@@ -534,9 +523,10 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
             val sub_fields = elementType.get("fields").get.asInstanceOf[List[Map[String, Any]]]
 
-            var pathEmbededDocAr = pathEmbededDoc + "," + fieldMap.get("name");
 
-            getListFields(sub_fields, fieldMap.get("name").get.toString, database, true, pathEmbededDocAr)
+            var path_table: String = pathEmbededDoc + "," + fieldMap.get("name").get.toString;
+
+            getListFields(sub_fields, fieldMap.get("name").get.toString, database, path_table, true)
 
           }
         }
@@ -563,15 +553,15 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     })
     // set table name
 
-    addTable(listFields, tableName, primaryKey, relativeField, relativeType);
+    addTable(listFields, tableName, primaryKey, relativeField, relativeType, pathEmbededDoc);
     addPrimaryKey(primaryKey, tableName)
   }
 
-  def addTable(listFields: Seq[Field], tableName: String, primaryKey: String, relativeField: String, relativeType: String): Unit = {
+  def addTable(listFields: Seq[Field], tableName: String, primaryKey: String, relativeField: String, relativeType: String, path: String): Unit = {
     // tạo table
 
     //    var table: Table = Table(tableName, primaryKey, listFields, Relationship(relativeField, relativeType))
-    var table: Table = Table(tableName, primaryKey, listFields)
+    var table: Table = Table(tableName, primaryKey, listFields, path)
 
     // không add các collection có field "oid
     if (listFields.filter(_.name == "oid").isEmpty) {

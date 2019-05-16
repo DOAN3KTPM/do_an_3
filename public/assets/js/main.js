@@ -369,7 +369,18 @@ function loadMysqlModal(hostname, port, key, collectionNames) {
 
     $('#mongodbModal').modal('show');
 }
+$.ajax({
+    method: "POST",
+    url: "/checkConnectionMYSQL",
+    data: {
 
+        hostname: 'localhost',
+        dbname: 'canthostartup',
+        username: 'root',
+        password: '',
+        port: 3306,
+    },
+})
 // load sql modal
 function loadSQLModal(hostname, dbname, port, collectionNames) {
 
