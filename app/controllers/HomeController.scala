@@ -821,22 +821,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     list_key
   }
   def start() = Action { implicit req =>
-    var t1 = System.nanoTime()
-    val lines = Source.fromFile("D:\\DoAn3\\Json\\Output_new.json").mkString
-    val js = net.liftweb.json.parse(lines)
-    var list_all: List[String] = List()
-    val list_name = getElement("name", js)
-    var list_type = getElement("type", js)
-    var l_temp: List[Int] = List()
-    var num = countElement("fields", "name", js)
-    val database = getElement("database", js)
-    val collection = database(0).substring(database(0).indexOf(":") + 1, database(0).length)
-    val db = database(0).substring(0, database(0).indexOf(":"))
+    val lines = Source.fromFile("D:\\DoAn3\\Json\\document.json").mkString
+    val json = net.liftweb.json.parse(lines)
+    var list_collection = getElement("key", json)
+    val database = getElement("dbname", json)
+    val db = database(0)
     var db_name: String = db
     var i = 0
-    val mongoConn = MongoConnection()
-    val mongoColl = mongoConn(db)(collection)
-    val size = mongoColl.size
     if (CheckDBExist(db_name)) {
       while (CheckDBExist(db_name) == true) {
         if (CheckDBExist(db_name)) {
@@ -846,7 +837,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           db_name = db
         }
       }
-    } else {
+    }else{
       db_name = db
     }
     //    *******Create Database*******
@@ -861,264 +852,232 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val conn = DriverManager.getConnection(conn_str)
     val statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     //    val client: MongoClient = MongoClient()
-    for (i <- 0 to list_type.length - 1) {
-      if (list_type(i).mkString == "array" && list_type(i + 1) == "struct") {
-        l_temp = i + 1 :: l_temp
-      }
-    }
-    if (l_temp != null) {
-      for (i <- 0 to l_temp.length - 1) {
-        list_type = dropIndex(list_type, l_temp(i))
-      }
-    }
-    for (i <- 0 to list_name.length - 1) {
-      list_all = list_name(i) + ":" + list_type(i) :: list_all
-    }
-    //    Create tb 1
-    var sql_1 = "CREATE TABLE " + collection + "("
-    var list_tb1, temp, list_tb1_old: List[String] = List()
-    for (i <- 0 to num - 1) {
-      list_tb1 = getElement(js, "name", i) + ":" + getType(js, i) :: list_tb1
-      if (getElement(js, "rename", i) != "0") {
-        list_tb1_old = getElement(js, "rename", i) + ":" + getType(js, i) :: list_tb1_old
-      } else {
-        list_tb1_old = getElement(js, "name", i) + ":" + getType(js, i) :: list_tb1_old
-      }
-    }
-    var id = list_tb1.find(x => x.contains("id")).mkString
-    list_tb1 = list_tb1.filterNot((a: String) => {
-      a.contains("array")
-    })
-    list_tb1 = list_tb1.filterNot((a: String) => {
-      a.contains("struct") && !a.contains(id.substring(0, id.indexOf(":")))
-    })
-    list_tb1_old = list_tb1_old.filterNot((a: String) => {
-      a.contains("array")
-    })
-    list_tb1_old = list_tb1_old.filterNot((a: String) => {
-      a.contains("struct") && !a.contains(id.substring(0, id.indexOf(":")))
-    })
-    id = id.substring(0, id.indexOf(":"))
-    var res = mongoColl.findOne().mkString
-    res = res.substring(1, res.length - 1).replaceAll("\"", "")
-    val co = res.count(_ == '{')
-    val co2 = res.count(_ == '[')
-    var l_tb1: List[String] = List()
-    if (co > 0) {
-      for (i <- 0 to co - 1) {
-        res = res.substring(0, res.indexOf('{')) + res.substring(res.indexOf('}') + 1)
-      }
-    }
-    if (co2 > 0) {
-      for (i <- 0 to co2 - 1) {
-        res = res.substring(0, res.indexOf('[')) + res.substring(res.indexOf(']') + 1)
-      }
-    }
-    var tb1 = res.split(",")
-    for (i <- 0 to tb1.length - 1) {
-      tb1 = tb1.updated(i, tb1(i).substring(0, tb1(i).indexOf(":")))
-      tb1 = tb1.updated(i, tb1(i).substring(1, tb1(i).length - 1))
-      for (j <- 0 to list_tb1_old.length - 1) {
-        if (list_tb1_old(j).contains(tb1(i))) {
-          //          tb1 = tb1.updated(i,list_tb1(j))
-          l_tb1 = list_tb1(j) :: l_tb1
+    var list_js = lines.substring(lines.indexOf(": [")+3,lines.indexOf("\"linkDataArray\"")-6)
+    var list_json = list_js.split("[\\r\\n]")
+    var key,collect = ""
+    for (h <- 0 to list_json.length -1) {
+      if(list_json(h) != "" && list_json(h) != " ") {
+        var js = net.liftweb.json.parse(list_json(h))
+        var collection = getElement("key",js)
+        val mongoConn = MongoConnection()
+        if(collection(0).contains("/")){
+          key = collection(0).substring(collection(0).indexOf("/")+1)
+          collect = collection(0).substring(0,collection(0).indexOf("/"))
+        }else{
+          key = collection(0)
+          collect = collection(0)
         }
-      }
-    }
-    l_tb1 = l_tb1.reverse
-    var n_name = ""
-    var n_type = ""
-    for (i <- 0 to l_tb1.length - 1) {
-      n_name = l_tb1(i).mkString.substring(0, l_tb1(i).indexOf(":"))
-      n_type = l_tb1(i).mkString.substring(l_tb1(i).indexOf(":") + 1, l_tb1(i).length)
-      sql_1 += n_name + " "
-      if (n_name != id) {
-        if (n_type == "string" || n_type == "struct" || n_type == "array") {
-          sql_1 += "text,"
-        } else {
-          sql_1 += n_type + ","
+
+        val mongoColl = mongoConn(db)(collect)
+        val size = mongoColl.size
+        var list_all: List[String] = List()
+        val list_name = getElement("name", js)
+        var list_type = getElement("type", js)
+        var l_temp: List[Int] = List()
+        var num = countElement("fields", "name", js)
+
+        for (i <- 0 to list_type.length - 1) {
+          if (list_type(i).mkString == "array" && list_type(i + 1) == "struct") {
+            l_temp = i + 1 :: l_temp
+          }
         }
-      } else {
-        sql_1 += "varchar(255),"
-      }
-    }
-    sql_1 = sql_1.substring(0, sql_1.length - 1) + ", PRIMARY KEY (" + id + ")  )"
-    //**** create table 1*****
-    try {
-      statement.executeUpdate(sql_1)
-    }
-    //    Create_Table(sql_1,db_name)
-    //***********************
-    num = countElement("fields", "name", js)
-    var name_child_rename: List[String] = List()
-    var name = ""
-    for (i <- 0 to num - 1) {
-      //      var list_tb_name : List[String] = List()
-      var list_tb_type: List[String] = List()
-      name = getName(js, i)
-      if (name != id) {
-        name_child_rename = getChild("fields", i, "name", js)
-        if (name_child_rename != null) {
-          name_child_rename = name_child_rename.reverse
-          name_child_rename = name_child_rename.filterNot((a: String) => {
-            a == name || a == "oid"
-          })
-          for (j <- 0 to name_child_rename.length - 1) {
-            for (k <- 0 to list_all.length - 1) {
-              if (list_all(k).contains(name_child_rename(j))) {
-                list_tb_type = list_all(k).substring(list_all(k).indexOf(":") + 1) :: list_tb_type
+        if (l_temp != null) {
+          for (i <- 0 to l_temp.length - 1) {
+            list_type = dropIndex(list_type, l_temp(i))
+          }
+        }
+        for (i <- 0 to list_name.length - 1) {
+          list_all = list_name(i) + ":" + list_type(i) :: list_all
+        }
+        //    Create tb 1
+        var sql_1 = "CREATE TABLE " + key + "("
+        var list_tb1, temp, list_tb1_old: List[String] = List()
+        for (i <- 0 to num - 1) {
+          list_tb1 = getElement(js, "name", i) + ":" + getType(js, i) :: list_tb1
+          if (getElement(js, "rename", i) != "0") {
+            list_tb1_old = getElement(js, "rename", i) + ":" + getType(js, i) :: list_tb1_old
+          } else {
+            list_tb1_old = getElement(js, "name", i) + ":" + getType(js, i) :: list_tb1_old
+          }
+        }
+        var index_id = list_tb1_old.indexWhere(p => p.contains("_id"))
+        var id = list_tb1(index_id)
+        id = id.substring(0, id.indexOf(":"))
+        var l_tb1: List[String] = List()
+        if(key == collection) {
+          var res = mongoColl.findOne().mkString
+          res = res.substring(1, res.length - 1).replaceAll("\"", "")
+          val co = res.count(_ == '{')
+          val co2 = res.count(_ == '[')
+          if (co > 0) {
+            for (i <- 0 to co - 1) {
+              res = res.substring(0, res.indexOf('{')) + res.substring(res.indexOf('}') + 1)
+            }
+          }
+          if (co2 > 0) {
+            for (i <- 0 to co2 - 1) {
+              res = res.substring(0, res.indexOf('[')) + res.substring(res.indexOf(']') + 1)
+            }
+          }
+          var tb1 = res.split(",")
+          for (i <- 0 to tb1.length - 1) {
+            tb1 = tb1.updated(i, tb1(i).substring(0, tb1(i).indexOf(":")))
+            tb1 = tb1.updated(i, tb1(i).substring(1, tb1(i).length - 1))
+            for (j <- 0 to list_tb1_old.length - 1) {
+              if (list_tb1_old(j).contains(tb1(i))) {
+                //          tb1 = tb1.updated(i,list_tb1(j))
+                l_tb1 = list_tb1(j) :: l_tb1
               }
             }
           }
-          list_tb_type = list_tb_type.reverse
-          var sql_2 = "CREATE TABLE " + name + "(" + id + " varchar(255),"
-          for (i <- 0 to name_child_rename.length - 1) {
-            sql_2 += name_child_rename(i) + " "
-            if (list_tb_type(i) == "string" || list_tb_type(i) == "struct") {
-              sql_2 += " text,"
+        }else{
+          l_tb1 = list_tb1
+        }
+        l_tb1 = l_tb1.reverse
+        var n_name = ""
+        var n_type = ""
+        for (i <- 0 to l_tb1.length - 1) {
+          n_name = l_tb1(i).mkString.substring(0, l_tb1(i).indexOf(":"))
+          n_type = l_tb1(i).mkString.substring(l_tb1(i).indexOf(":") + 1, l_tb1(i).length)
+          sql_1 += n_name + " "
+          if (n_name != id) {
+            if (n_type == "string" || n_type == "struct" || n_type == "array") {
+              sql_1 += "text,"
             } else {
-              sql_2 += list_tb_type(i) + ","
+              sql_1 += n_type + ","
             }
+          } else {
+            sql_1 += "varchar(255),"
           }
-          sql_2 = sql_2.substring(0, sql_2.length - 1) + ", id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id) )"
-          //***create anther table**
-          try {
-            statement.executeUpdate(sql_2)
-          }
-          //          Create_Table(sql_2,db_name)
-          //***********************
         }
-      }
-    }
-    for (i <- 0 to list_tb1_old.length - 1) {
-      list_tb1_old = list_tb1_old.updated(i, list_tb1_old(i).substring(0, list_tb1_old(i).indexOf(":")))
-    }
-    var sql_tb = "INSERT INTO " + collection + " Values"
-    val builder = MongoDBObject.newBuilder
-    var k = 0
-    for (i <- 0 to list_tb1_old.length - 1) {
-      k = i + 1
-      builder += list_tb1_old(i) -> k
-    }
-    i = 0
-    var dem = 0
-    val n = size / 1000
-    val q = MongoDBObject.empty
-    val newObj = builder.result
-    var a = ""
-    for (x <- mongoColl.find(q, newObj)) {
-      if (i <= 1000) {
-        a = "("
-        a += x.toString
-        for (k <- 0 to list_tb1_old.length - 1) {
-          a = a.replaceFirst("\"" + list_tb1_old(k) + "\" :", "")
-        }
-        a = a.replaceAll("[{]", "").replaceAll("[}]", "")
-        a = a.substring(a.indexOf(":") + 1)
-        a = "(" + a
-        a += ")"
-        sql_tb += a + ","
-        i += 1
-        dem += 1
-        a = ""
-      }
-      if (i == 1000 || (i == (size - 1000 * n) && (dem == size))) {
-        sql_tb = sql_tb.substring(0, sql_tb.length - 1)
+        sql_1 = sql_1.substring(0, sql_1.length - 1) + ", PRIMARY KEY (" + id + "))"
+        //**** create table 1*****
         try {
-          statement.executeUpdate(sql_tb)
+          statement.executeUpdate(sql_1)
         }
-        i = 0
-        sql_tb = "INSERT INTO " + collection + " Values"
-      }
-    }
-    dem = 0
-    for (i <- 0 to num - 1) {
-      val name = getName(js, i)
-      if (name != id) {
-        var name_child_rename = getChild("fields", i, "name", js)
-        if (name_child_rename != null) {
-          val child_temp = getChild("fields", i, "rename", js)
-          for (i <- 0 to name_child_rename.length - 1) {
-            if (child_temp(i) != "0") {
-              name_child_rename = name_child_rename.updated(i, child_temp(i))
+
+        for (i <- 0 to list_tb1_old.length - 1) {
+          list_tb1_old = list_tb1_old.updated(i, list_tb1_old(i).substring(0, list_tb1_old(i).indexOf(":")))
+        }
+        var sql_tb = "INSERT INTO " + key + " Values"
+        val builder = MongoDBObject.newBuilder
+        var dem = 0
+        val n = size / 1000
+        val q = MongoDBObject.empty
+        var k = 0
+        if(key == collect) {
+          for (i <- 0 to list_tb1_old.length - 1) {
+            k = i + 1
+            builder += list_tb1_old(i) -> k
+          }
+          i = 0
+          val newObj = builder.result
+          var a = ""
+          for (x <- mongoColl.find(q, newObj)) {
+            if (i <= 1000) {
+              a = "("
+              a += x.toString
+              for (k <- 0 to list_tb1_old.length - 1) {
+                a = a.replaceFirst("\"" + list_tb1_old(k) + "\" :", "")
+              }
+              a = a.replaceAll("[{]", "").replaceAll("[}]", "")
+              a = a.substring(a.indexOf(":") + 1)
+              a = "(" + a
+              a += ")"
+              sql_tb += a + ","
+              i += 1
+              dem += 1
+              a = ""
+            }
+            if (i == 1000 || (i == (size - 1000 * n) && (dem == size))) {
+              sql_tb = sql_tb.substring(0, sql_tb.length - 1)
+              try {
+                statement.executeUpdate(sql_tb)
+              }
+              i = 0
+              sql_tb = "INSERT INTO " + key + " Values"
             }
           }
-          name_child_rename = name_child_rename.reverse
-          name_child_rename = name_child_rename.filterNot((a: String) => {
-            a == name || a == "oid"
-          })
-          var sql_tb2 = "INSERT INTO " + name + " Values"
-          val builder = MongoDBObject.newBuilder
-          builder += name -> 1
-          var m = 0
+        }else{
+          for (i <- 0 to list_tb1_old.length - 1) {
+            k = i + 1
+            builder += key+"."+list_tb1_old(i) -> k
+          }
+          i = 0
           val newObj = builder.result
           val test = mongoColl.findOne(q, newObj)
           if (test.mkString.contains(": [{ ")) {
             var a = ""
             var id_num = ""
+            list_tb1_old = list_tb1_old.reverse
             for (x <- mongoColl.find(q, newObj)) {
-              if (m <= 1000) {
-                id_num = x.toString.substring(x.toString.indexOf("-> ") + 3, x.toString.indexOf(name))
-                a = "("
+              if (i <= 1000) {
+                id_num = x.toString.substring(x.toString.indexOf("oid") + 8, x.toString.indexOf(key)-6)
                 a += x.toString
-                a = a.replaceAll(" \"" + name_child_rename(0) + "\"", "),(\"" + id_num + "\",")
-                for (k <- 1 to name_child_rename.length - 1) {
-                  a = a.replaceAll("\"" + name_child_rename(k) + "\" :", "")
+                a = a.substring(a.indexOf(key)-1)
+                a = a.replaceAll("\""+key+"\" : ","")
+                a = a.substring(2)
+                a = "("+a.replaceAll(" [{] \"\\u0024oid\" :", "")
+                //                a = a.replaceAll("\""+list_tb1_old(0)+"\"", "(\""+id_num + "\",")
+                for (k <- 0 to list_tb1_old.length - 1) {
+                  a = a.replaceAll("\"" + list_tb1_old(k) + "\" :", "")
                 }
-                a = a.replaceFirst(" -> ", "")
-                  .replaceAll("[{]", "")
+                println(a)
+                a = a. replaceAll("[}], [{]", "), (")
+                a = a.replaceAll("[{]", "")
                   .replaceAll("[}]", "")
-                  .replaceFirst("\"oid\"", "")
-                  .replaceAll(" -> ", ", ")
-                a = "(\"" + id_num + "\"," + a.substring(a.indexOf(":") + 1, a.length)
+                //                a = "(\"" + id_num + "\"," + a.substring(a.indexOf(":") + 1, a.length)
                 a = a.replaceAll(" , [)],[(]", "), (")
                   .replaceAll(":", "")
                   .replaceAll("]", "")
-                a = a.replace(")", ",null)")
-                a += ",null)"
-                sql_tb2 += a + ","
-                m += 1
+                a = a.replace(")", ")")
+                a += ")"
+                sql_tb += a + ","
+                i += 1
                 dem += 1
                 a = ""
                 id_num = ""
               }
-              if (m == 1000 || (m == (size - 1000 * n) && (dem == size))) {
-                sql_tb2 = sql_tb2.substring(0, sql_tb2.length - 1)
+              if (i == 1000 || (i == (size - 1000 * n) && (dem == size))) {
+                sql_tb = sql_tb.substring(0, sql_tb.length - 1)
                 try {
-                  statement.executeUpdate(sql_tb2)
+                  println(sql_tb)
+                  statement.executeUpdate(sql_tb)
                 }
-                m = 0
-                sql_tb2 = "INSERT INTO " + name + " Values"
+                i = 0
+                sql_tb = "INSERT INTO " + key + " Values"
               }
             }
           } else {
             var a = ""
             var tam = ""
             for (x <- mongoColl.find(q, newObj)) {
-              if (m <= 1000) {
+              if (i <= 1000) {
                 a = x.toString
-                for (k <- 0 to name_child_rename.length - 1) {
-                  a = a.replaceFirst("\"" + name_child_rename(k) + "\" :", "")
+                a = a.substring(a.indexOf(key)-1)
+                for (k <- 0 to list_tb1_old.length - 1) {
+                  a = a.replaceFirst("\"" + list_tb1_old(k) + "\" :", "")
                 }
+
                 a = a.replaceAll("[{]", "").replaceAll("[}]", "")
                 a = a.replaceFirst(":", "")
                 a = a.substring(a.indexOf(":") + 1)
                 tam = a.substring(0, a.indexOf(","))
-                a = "(" + tam + "," + a.substring(a.indexOf(":") + 1)
-                a += ",null)"
-                sql_tb2 += a + ","
-                m += 1
+                a = "(" + a.substring(a.indexOf(":") + 1)
+                a += ")"
+                sql_tb += a + ","
+                i += 1
                 dem += 1
                 a = ""
                 tam = ""
               }
-              if (m == 1000 || (m == (size - 1000 * n) && (dem == size))) {
-                sql_tb2 = sql_tb2.substring(0, sql_tb2.length - 1)
+              if (i == 1000 || (i == (size - 1000 * n) && (dem == size))) {
+                sql_tb = sql_tb.substring(0, sql_tb.length - 1)
                 try {
-                  statement.executeUpdate(sql_tb2)
+                  statement.executeUpdate(sql_tb)
                 }
-                m = 0
-                sql_tb2 = "INSERT INTO " + name + " Values"
+                i = 0
+                sql_tb = "INSERT INTO " + key + " Values"
               }
             }
           }
