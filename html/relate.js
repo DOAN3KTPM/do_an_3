@@ -338,7 +338,7 @@ $(document).on('focusout', '.row_data', function(event)
     store.rename = store.name;
     store.name = arr.name;
     myRelate.model = go.Model.fromJson(myRelate.model.toJson());
-     
+    
     
 })  
 //--->save single field data > end
@@ -347,8 +347,10 @@ $(document).on('focusout', '.row_data', function(event)
         download(myRelate.model.toJson(), "loadingData.json", "text/plain")
         myRelate.isModified = false;
 
+        
     }
 
 
     // $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
+
 

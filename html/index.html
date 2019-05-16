@@ -53,7 +53,7 @@
             <input class="btn btn-danger btn-block mb-3" id="Delete" onclick="myDiagram.commandHandler.deleteSelection()" type="button" value="Delete"/>
             <input class="btn btn-info btn-block mb-3" id="Undo" onclick="myDiagram.commandHandler.undo()" type="button" value="Undo"/>
             <input class="btn btn-dark btn-block" id="Redo" onclick="myDiagram.commandHandler.redo()" type="button" value="Redo"/>
-            <input class="btn btn-dark btn-block mt-5" onclick="updateJson()" type="button" value="Download Json"/>
+            <input class="btn btn-default btn-block mt-5" onclick="updateJson()" type="button" value="Download Json"/>
         </div>
     </div>
 </div>
@@ -84,7 +84,7 @@ Diagram Model saved in JSON format:
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Configure connection</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Configure connection mongodb</h5>
                 <button aria-label="Close" class="close" data-dismiss="modal" type="button">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -113,6 +113,45 @@ Diagram Model saved in JSON format:
                 <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
                 <button class="btn btn-primary save" data-key onclick="saveConfigureMongodb(this)" type="button">Save changes</button>
                 <button class="btn btn-danger check-connect" data-key onclick="checkConnectMongodb(this)" type="button">Check connection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal mysql -->
+<div aria-hidden="true" aria-labelledby="exampleModalLabel" class="modal fade" id="mysqlModal" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Configure connection mysql</h5>
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- hostname -->
+                <div class="form-group">
+                    <label for="hostname-mg">Host name() or IP address(es)</label>
+                    <input class="form-control" id="hostname-mg" type="text">
+                </div>
+                <!-- port -->
+                <div class="form-group">
+                    <label for="port-mg">Port</label>
+                    <input class="form-control" id="port-mg" type="text">
+                </div>
+                <!-- db-name -->
+                <div class="form-group">
+                    <label for="dbname-mg">Database Name</label>
+                    <input class="form-control" id="dbname-mg" type="text">
+                </div>
+
+                <div class="collections"></div>
+                <div id="msg"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
+                <button class="btn btn-primary save" data-key onclick="saveConfigureMongodb(this)" type="button">Save changes</button>
+                <button class="btn btn-danger check-connect" data-key onclick="checkConnectMysql(this)" type="button">Check connection</button>
             </div>
         </div>
     </div>
@@ -156,8 +195,7 @@ Diagram Model saved in JSON format:
                 <!-- data -->
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
-                <button class="btn btn-success save" data-key onclick="saveJson()" type="button">Export</button>
+                <button class="btn btn-success" data-dismiss="modal" type="button">Save & Close</button>
                 <div id="container"></div>
             </div>
         </div>
@@ -166,7 +204,7 @@ Diagram Model saved in JSON format:
 
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="assets/js/jquery-3.4.1.min.js"></script>
 <!-- <script src="https://www.jqueryscript.net/demo/Creating-A-Live-Editable-Table-with-jQuery-Tabledit/jquery.tabledit.js"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -205,130 +243,138 @@ Diagram Model saved in JSON format:
 
     // showModel();  // show the diagram's initial model
     function showRelationship() {
-        var data = {
-            "status": "200",
-            "message": "Success",
-            "tables": [{
-                "name": "book",
-                "primaryKey": "author",
-                "fields": [{
-                    "name": "_id",
-                    "type": "",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "author",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 5, "max": 25},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "language",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 4, "max": 8},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "published_date",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 9, "max": 9},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "publisher",
-                    "type": "struct",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "title",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 5, "max": 24},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "publisher", "type": "1_1"}
-            }, {
-                "name": "publisher",
-                "primaryKey": "name",
-                "fields": [{
-                    "name": "name",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 13, "max": 15},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "founded",
-                    "type": "integer",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "location",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 2, "max": 2},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "publisher", "type": "1_1"}
-            }, {
-                "name": "users",
-                "primaryKey": "__v",
-                "fields": [{
-                    "name": "__v",
-                    "type": "integer",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "_id",
-                    "type": "",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "createdAt",
-                    "type": "timestamp",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "email",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "enable",
-                    "type": "boolean",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "name",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 4, "max": 13},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "password",
-                    "type": "string",
-                    "nullable": "true",
-                    "length": {"min": 60, "max": 60},
-                    "relationship": {"fieldName": "", "type": ""}
-                }, {
-                    "name": "updatedAt",
-                    "type": "timestamp",
-                    "nullable": "true",
-                    "length": {"min": 0, "max": 0},
-                    "relationship": {"fieldName": "", "type": ""}
-                }],
-                "relationship": {"fieldName": "", "type": ""}
-            }]
-        };
-        
+        var data = {  
+   "status":"200",
+   "message":"Success",
+   "tables":[  
+      {  
+         "name":"mentor",
+         "primaryKey":"_id",
+         "fields":[  
+            {  
+               "name":"_id",
+               "type":"",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            },
+            {  
+               "name":"name",
+               "type":"string",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            }
+         ]
+      },
+      {  
+         "name":"classes",
+         "primaryKey":"name",
+         "fields":[  
+            {  
+               "name":"_id",
+               "type":"",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            },
+            {  
+               "name":"mentor",
+               "type":"struct",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"mentor",
+                  "fieldName":"_id"
+               }
+            },
+            {  
+               "name":"name",
+               "type":"string",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            }
+         ]
+      },
+      {  
+         "name":"students",
+         "primaryKey":"_id",
+         "fields":[  
+            {  
+               "name":"_id",
+               "type":"",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            },
+            {  
+               "name":"class",
+               "type":"string",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"classes",
+                  "fieldName":"name"
+               }
+            },
+            {  
+               "name":"full_name",
+               "type":"string",
+               "nullable":"true",
+               "length":{  
+                  "min":0,
+                  "max":0
+               },
+               "relationship":{  
+                  "tableName":"",
+                  "fieldName":""
+               }
+            }
+         ]
+      }
+   ]
+};
+
         var nodeData = new Array();
+        var linkData = new Array();
+        var dataName = $('#dbname-mg').val();
         for (let table of data.tables) {
 
             var fields = new Array();
@@ -338,21 +384,32 @@ Diagram Model saved in JSON format:
                 fields.push(
                     {
                         name: field.name,
-                        rename: "0"
-                        ,
-                        figure: table.primaryKey == field.name ? "Key" : ""
+                        type: field.type,
+                        rename: "",                  
+                        figure: table.primaryKey == field.name ? "Key" : "Diamond",
+                        color: table.primaryKey == field.name ? "#ffc107" : "#7FBA00",
                     }
                 )
+                // check if exist relationship
+                if(field.relationship.tableName != "" && field.relationship.fieldName != "") {
+                    linkData.push({
+                        from: table.name, 
+                        fromPort: field.name, 
+                        to: field.relationship.tableName, 
+                        toPort: field.relationship.fieldName
+                    })
+                }
+                
             }
-
+            
             nodeData.push({
+                    dbname: dataName,
                     key: table.name,
                     fields: fields,
-                    loc: "0 0"
                 }
             )
-        }
 
+        }
         myRelate.model =
             go.Model.fromJson({
                 copiesArrays: true,
@@ -360,12 +417,9 @@ Diagram Model saved in JSON format:
                 linkFromPortIdProperty: "fromPort",
                 linkToPortIdProperty: "toPort",
                 nodeDataArray: nodeData,
-                linkDataArray: [
-                    {from: "Record1", fromPort: "field1", to: "Record2", toPort: "fieldA", figure: "Ellipse"},
-                    {from: "Record1", fromPort: "field2", to: "Record2", toPort: "fieldD"},
-                    {from: "Record1", fromPort: "fieldThree", to: "Record2", toPort: "fieldB"}
-                ]
+                linkDataArray: linkData
             })
+
     }
 </script>
 </body>

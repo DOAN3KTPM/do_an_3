@@ -18,58 +18,10 @@ function init() {
         let data = ev.subject.part.data
         switch (data.category) {
             case 'MONGODB': {
-                let models = myDiagram.model;
-                let arrayLinks = JSON.parse(models.toJson()).linkDataArray
-
-                let modelLink = arrayLinks.filter(link => link.to == data.key);
-
-                let keyLink = null;
-                if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
-                    keyLink = modelLink[0].from
-                     // 
-                let collectionNames = new Array()
-                if (!keyLink) {
-                    let dataLink = models.findNodeDataForKey(keyLink);
-                    collectionNames = dataLink.collectionNames
-                }
-                // send host name port collectionName to query
-                console.log(collectionNames)
-                // send ajax
-                let dataCollections = [
-                    {
-                        name: "sinh vien",
-                        fields: [
-                        {
-                            name: "MSSV",
-                            type: "int",
-                        },
-                        {
-                            name: "ho_ten",
-                            type: "String",
-                        }
-                        ]
-                    },
-                    {
-                        name: "lop",
-                        fields: [
-                        {
-                            name: "ma_lop",
-                            type: "int",
-                        },
-                        {
-                            name: "ten_lop",
-                            type: "String",
-                        }
-                        ]
-                    }
-                ];
-                loadSQLModal(dataCollections)
-                }else{
-                    let hostname = data.hostname ? data.hostname : 'localhost'
-                    let port = data.port ? data.port : '27017'
-                    let collectionNames = data.collections ? data.collections : []
-                    loadMysqlModal(hostname, port, data.key, collectionNames)
-                }
+                let hostname = data.hostname ? data.hostname : 'localhost'
+                let port = data.port ? data.port : '27017'
+                let collectionNames = data.collectionNames ? data.collectionNames : []
+                loadMongodbModal(hostname, port, data.key, collectionNames);
                 break;
             }
             case 'SQL': {
@@ -81,12 +33,13 @@ function init() {
                 let keyLink = null;
                 if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
                     keyLink = modelLink[0].from
-                     // 
+
+                // 
                 let collectionNames = new Array()
-                if (keyLink) {
+              
                     let dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
-                }
+                
                 // send host name port collectionName to query
                 console.log(collectionNames)
                 // send ajax
@@ -121,12 +74,12 @@ function init() {
                 loadSQLModal(dataCollections)
                 }else{
                     let hostname = data.hostname ? data.hostname : 'localhost'
-                    let port = data.port ? data.port : '3306'
-                    let collectionNames = data.collections ? data.collections : []
-                    loadMysqlModal(hostname, port, data.key, collectionNames)
+                let port = data.port ? data.port : '3306'
+                let collectionNames = data.collectionNames ? data.collectionNames : []
+                console.log(data);
+                loadMysqlModal(hostname, port, data.key, collectionNames);
                 }
 
-               
                 break;
             }
         }
@@ -215,7 +168,7 @@ function init() {
             // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "images/mongodb.png" }),
+                    { desiredSize: new go.Size(40, 40), source: "images/icons8-mongodb-96.png" }),
             ),
             // four named ports, one on each side:
             makePort("T", go.Spot.Top, false, true),
@@ -227,7 +180,7 @@ function init() {
         $(go.Node, "Spot", nodeStyle(),
             $(go.Panel, "Auto",
                 $(go.Picture,
-                    { desiredSize: new go.Size(40, 40), source: "images/mysql.png" })
+                    { desiredSize: new go.Size(40, 40), source: "images/icons8-mysql-96.png" })
             ),
             makePort("T", go.Spot.Top, false, true),
             makePort("L", go.Spot.Left, true, true),
@@ -300,6 +253,7 @@ function init() {
                 model: new go.GraphLinksModel([  // specify the contents of the Palette
                     { category: "MONGODB", text: "MONGODB" },
                     { category: "SQL", text: "SQL", },
+                
                 ])
             });
 
@@ -403,22 +357,23 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
     $('#mongodbModal .collections').html(html)  
 
     $('#mongodbModal').modal('show');
+
 }
 
-//  load mongodb modal
 function loadMysqlModal(hostname, port, key, collectionNames) {
-    $('#mongodbModal').find('#hostname-mg').val(hostname)
-    $('#mongodbModal').find('#port-mg').val(port)
-    $('#mongodbModal').find('.save').attr('data-key', key)
+    $('#mysqlModal').find('#hostname-mg').val(hostname)
+    $('#mysqlModal').find('#port-mg').val(port)
+    $('#mysqlModal').find('.save').attr('data-key', key)
     let html = "";
      for (var name of collectionNames) {
             html += `<div class="collection">
                 <input type="checkbox" name="collections" value="${name}" id="${name}" checked> <label for="${name}">${name}</label>
             </div>`
     }
-    $('#mongodbModal .collections').html(html)  
+    $('#mysqlModal .collections').html(html)  
 
-    $('#mongodbModal').modal('show');
+    $('#mysqlModal').modal('show');
+
 }
 
 // load sql modal
@@ -460,13 +415,6 @@ function loadSQLModal(dataCollections) {
     }
 
 $('#sqlModal .modal-body').html(html)
-// $('.table').Tabledit({
-//                 removeButton: false,
-//                 columns: {
-//                     identifier: [0, 'id'],
-//                     editable: [[1, 'Field name'],[2, 'Type']]
-//                 }
-//             });
     $('#sqlModal').modal('show');
 
 }
@@ -541,3 +489,23 @@ $('.collections').html(html)
     
 }
 
+function checkConnectMysql(input) {
+    let parent = $(input).parents('#mysqlModal')
+    let hostname = parent.find('#hostname-mg').val()
+    let dbname = parent.find('#dbname-mg').val()
+    let port = parent.find('#port-mg').val()
+    
+ var data = {
+    collectionNames : ['123',  '123']
+    }
+    var collectionNames = data.collectionNames
+    console.log(collectionNames)
+    let html = ''
+    for (var name of collectionNames) {
+        html += `<div class="collection">
+            <input type="checkbox" name="collections" value="${name}" id="${name}"> <label for="${name}">${name}</label>
+        </div>`
+}
+$('.collections').html(html)  
+    
+}
