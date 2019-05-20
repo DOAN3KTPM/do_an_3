@@ -18,10 +18,61 @@ function init() {
         let data = ev.subject.part.data
         switch (data.category) {
             case 'MONGODB': {
-                let hostname = data.hostname ? data.hostname : 'localhost'
+                let models = myDiagram.model;
+                let arrayLinks = JSON.parse(models.toJson()).linkDataArray
+
+                let modelLink = arrayLinks.filter(link => link.to == data.key);
+
+                let keyLink = null;
+                if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
+                    keyLink = modelLink[0].from
+
+                // 
+                let collectionNames = new Array()
+              
+                    let dataLink = models.findNodeDataForKey(keyLink);
+                    collectionNames = dataLink.collectionNames
+                
+                // send host name port collectionName to query
+                console.log(collectionNames)
+                // send ajax
+                let dataCollections = [
+                    {
+                        name: "ádasd",
+                        fields: [
+                        {
+                            name: "MSSV",
+                            type: "int",
+                        },
+                        {
+                            name: "ho_ten",
+                            type: "String",
+                        }
+                        ]
+                    },
+                    {
+                        name: "xcxzczx",
+                        fields: [
+                        {
+                            name: "ma_lop",
+                            type: "int",
+                        },
+                        {
+                            name: "ten_lop",
+                            type: "String",
+                        }
+                        ]
+                    }
+                ];
+                loadSQLModal(dataCollections)
+                }else{
+                    let hostname = data.hostname ? data.hostname : 'localhost'
                 let port = data.port ? data.port : '27017'
                 let collectionNames = data.collectionNames ? data.collectionNames : []
+                console.log(data);
                 loadMongodbModal(hostname, port, data.key, collectionNames);
+                }
+
                 break;
             }
             case 'SQL': {
@@ -317,10 +368,10 @@ function load() {
 
 // add an SVG rendering of the diagram at the end of this page
 function makeSVG() {
-    var svg = myDiagram.makeSvg({
-        scale: 0.5
+    var svg = myRelate.makeSvg({
+        scale: 1
     });
-    svg.style.border = "1px solid black";
+    svg.style.border = "1px dashed blue";
     obj = document.getElementById("SVGArea");
     obj.appendChild(svg);
     if (obj.children.length > 0) {
@@ -509,3 +560,4 @@ function checkConnectMysql(input) {
 $('.collections').html(html)  
     
 }
+

@@ -353,4 +353,18 @@ $(document).on('focusout', '.row_data', function(event)
 
     // $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
 
-
+function sendJson(input){
+       var json = (function () {
+    var json = null;
+    $.ajax({
+        'async': false,
+        'global': false,
+        'url': 'relate.js',
+        'dataType': "json",
+        'success': function (data) {
+            json = myRelate.model.toJson();
+        }
+    });
+    return json;
+})(); 
+}
