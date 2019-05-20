@@ -525,6 +525,8 @@ function checkConnectMysql(input) {
     let parent = $(input).parents('#mysqlModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
+    let username = parent.find('#username-mg').val()
+    let password = parent.find('#pass-mg').val()
     let port = parent.find('#port-mg').val()
     $.ajax({
         method: "POST",
@@ -532,6 +534,8 @@ function checkConnectMysql(input) {
         data: {
             hostname,
             dbname,
+            username,
+            password,
             port
         },
         success: function (data) {
