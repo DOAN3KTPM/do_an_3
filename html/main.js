@@ -493,6 +493,7 @@ function saveConfigureMongodb(input) {
     $('#mongodbModal').modal('hide');
 }
 function checkConnectMongodb(input) {
+    $('#select-all').removeClass('d-none')
     let parent = $(input).parents('#mongodbModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
@@ -541,6 +542,7 @@ $('.collections').html(html)
 }
 
 function checkConnectMysql(input) {
+    $('#select-all').removeClass('d-none')
     let parent = $(input).parents('#mysqlModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
@@ -561,3 +563,7 @@ $('.collections').html(html)
     
 }
 
+$('#select_all').click(function() {
+    var c = this.checked;
+    $(':checkbox').prop('checked',c);
+});
