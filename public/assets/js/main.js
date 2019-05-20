@@ -35,8 +35,10 @@ function init() {
 
                     hostname = dataLink.hostname
                     dbname = dataLink.dbname
+                    username = dataLink.username
+                    password = dataLink.password
                     port = dataLink.port
-                    loadSQLModal(hostname, dbname, port, collectionNames)
+                    loadMySqlSQLModal(hostname, dbname, username, password, port, collectionNames)
                 }else{
                     let hostname = data.hostname ? data.hostname : 'localhost'
                     let port = data.port ? data.port : '27017'
@@ -311,8 +313,8 @@ function load() {
 
 // add an SVG rendering of the diagram at the end of this page
 function makeSVG() {
-    var svg = myDiagram.makeSvg({
-        scale: 0.5
+    var svg = myRelate.makeSvg({
+        scale: 1
     });
     svg.style.border = "1px solid black";
     obj = document.getElementById("SVGArea");
@@ -371,14 +373,80 @@ function loadMysqlModal(hostname, port, key, collectionNames) {
 }
 
 // load sql modal
-function loadSQLModal(hostname, dbname, port, collectionNames) {
+function loadMySqlSQLModal(hostname, dbname,username, password, port, collectionNames) {
 
     $.ajax({
         method: "POST",
-        url: "/getMetadataOfCollection",
+        url: "/getMetaDataMYSQL",
         data: {
             hostname,
             dbname,
+            username,
+            password,
+            port,
+            tables_input: JSON.stringify(collectionNames)
+        },
+        success: function (data) {
+            data_tables = data.tables // global
+            let dataCollections = data.tables
+
+            if (dataCollections.length > 0) {
+                var html = ""
+                for (let table of dataCollections) {
+                    html += `
+<div class="table">
+<h3>${table.name}</h3>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+    <th>Primary key <i class="fas fa-key"></i></th>
+      <th scope="col">Field name</th>
+      <th scope="col">Type</th>
+    </tr>
+  </thead>
+  <tbody>
+  `;
+                    let i = 0;
+                    for (let field of  table.fields) {
+                        i++
+                        html += `<tr>
+    <th scope="row"><input type="checkbox" id="primary-key" value="1"/></th>
+      <td>${field.name}</td>
+      <td>${field.type}</td>
+    </tr>`
+                    }
+
+
+                    html += `
+  </tbody>
+</table>
+</div>
+
+            `
+                }
+            }
+
+            $('#sqlModal .modal-body').html(html)
+
+            $('#sqlModal').modal('show');
+        }
+    })
+
+
+
+}
+
+// load sql modal
+function loadSQLModal(hostname, dbname,username, password, port, collectionNames) {
+
+    $.ajax({
+        method: "POST",
+        url: "/getMetaDataMYSQL",
+        data: {
+            hostname,
+            dbname,
+            username,
+            password,
             port,
             collectionNames: JSON.stringify(collectionNames)
         },
@@ -431,7 +499,6 @@ function loadSQLModal(hostname, dbname, port, collectionNames) {
 
 
 }
-
 function saveConfigureMongodb(input) {
 
     let key = $(input).attr('data-key')
@@ -441,7 +508,7 @@ function saveConfigureMongodb(input) {
     let dbname = parent.find('#dbname-mg').val()
 
     let port = parent.find('#port-mg').val()
-    let collectionElements = parent.find('[name="collections"]');
+    let collectionElements = parent.find('[name="collections"]:checked');
     let collectionNames = new Array();
     for (let element of collectionElements) {
         collectionNames.push($(element).val())
@@ -461,10 +528,12 @@ function saveConfigureMysql(input) {
 
     let parent = $(input).parents('#mysqlModal')
     let hostname = parent.find('#hostname-mg').val()
+    let username = parent.find('#username-mg').val()
+    let password = parent.find('#pass-mg').val()
     let dbname = parent.find('#dbname-mg').val()
 
     let port = parent.find('#port-mg').val()
-    let collectionElements = parent.find('[name="collections"]');
+    let collectionElements = parent.find('[name="collections"]:checked');
     let collectionNames = new Array();
     for (let element of collectionElements) {
         collectionNames.push($(element).val())
@@ -474,7 +543,10 @@ function saveConfigureMysql(input) {
     nodeData.hostname = hostname
     nodeData.port = port
     nodeData.dbname = dbname
+    nodeData.username = username
+    nodeData.password = password
     nodeData.collectionNames = collectionNames
+
     $('#mysqlModal').modal('hide');
 }
 
@@ -544,7 +616,7 @@ function checkConnectMysql(input) {
             if (data.status == 500) {
                 toastr.error('Kết nối thất bại!')
             } else {
-                var collectionNames = data.collectionNames
+                var collectionNames = data.tableNames
                 console.log(collectionNames)
                 let html = ''
                 for (var name of collectionNames) {
