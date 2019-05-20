@@ -2,22 +2,8 @@ package controllers
 
 import java.util
 
-import play.api._
-import play.api.mvc._
 import javax.inject._
-import play.api.i18n.I18nSupport
 
-//import org.apache.spark.sql.SparkSession
-//import org.apache.spark.SparkConf
-//import org.apache.spark.SparkContext
-//
-//import scala.util.control.Breaks._
-//import scala.util.parsing.json._
-//import scala.io.Source
-//import org.apache.spark._
-//import org.apache.spark.streaming._
-//import org.apache.spark.streaming.StreamingContext._
-//import com.mongodb.spark.MongoSpark
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.{Completed, Observer, documentToUntypedDocument}
 import org.mongodb.scala.{Completed, Document, MongoClient, MongoCollection, MongoDatabase}
@@ -48,6 +34,15 @@ import java.sql.Connection
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.DatabaseMetaData;
+import scala.util.parsing.json.JSON.parseFull
+
+import play.api.libs.json.JsValue
+import play.api.i18n.I18nSupport
+import play.api._
+import scala.collection.JavaConversions._
+import play.api.mvc._
+
+
 @Singleton
 class MetaDataController @Inject()(cc: ControllerComponents) extends AbstractController(cc) with I18nSupport {
 
@@ -55,6 +50,38 @@ class MetaDataController @Inject()(cc: ControllerComponents) extends AbstractCon
   import play.api.data.Forms._
   import play.api.data.Form
   import WidgetForm._
+
+  implicit var lengthWrites: Writes[Length] = (
+    (JsPath \ "min").write[Int] and
+      (JsPath \ "max").write[Int]
+    ) (unlift(Length.unapply))
+
+  implicit var relationshipWrites: Writes[Relationship] = (
+    (JsPath \ "fieldName").write[String] and
+      (JsPath \ "type").write[String]
+    ) (unlift(Relationship.unapply))
+
+  implicit var relationshipFieldWrites: Writes[RelationshipField] = (
+    (JsPath \ "tableName").write[String] and
+      (JsPath \ "fieldName").write[String]
+    ) (unlift(RelationshipField.unapply))
+
+  implicit var fieldWrites: Writes[Field] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "type").write[String] and
+      (JsPath \ "nullable").write[String] and
+      (JsPath \ "length").write[Length] and
+      (JsPath \ "relationship").write[RelationshipField]
+    ) (unlift(Field.unapply))
+
+  implicit var tableWrites: Writes[Table] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "primaryKey").write[String] and
+      (JsPath \ "fields").write[Seq[Field]] and
+      (JsPath \ "path").write[String]
+    //      (JsPath \ "relationship").write[Relationship]
+    ) (unlift(Table.unapply))
+
 
   //  check connection to mongodb
   def checkConnectionMGDB = Action(parse.tolerantFormUrlEncoded) { request =>
@@ -69,7 +96,6 @@ class MetaDataController @Inject()(cc: ControllerComponents) extends AbstractCon
       var mongoClient: MongoClient = MongoClient("mongodb://" + hostname + ":" + port)
 
       val database: MongoDatabase = mongoClient.getDatabase(dbname)
-
 
 
       // get name of collections
@@ -100,77 +126,85 @@ class MetaDataController @Inject()(cc: ControllerComponents) extends AbstractCon
     Ok(Json.obj("status" -> status, "message" -> (message), "collectionNames" -> Json.toJson(listCollectionNames)))
   }
 
-//   check mysql
+  //   check mysql
   def checkConnectionMYSQL() = Action(parse.tolerantFormUrlEncoded) { request =>
     var tables: Array[String] = Array[String]();
-//    try {
-      var hostname = request.body.get("hostname").map(_.head).get;
+    //    try {
+    var hostname = request.body.get("hostname").map(_.head).get;
 
-      var port = request.body.get("port").map(_.head).get;
-      var dbname = request.body.get("dbname").map(_.head).get;
-      val url: String = "jdbc:mysql://" + hostname + ":" + port + "/" + dbname;
-      val driver = "com.mysql.jdbc.Driver";
-      val username = request.body.get("username").map(_.head).get;
-      val password = request.body.get("password").map(_.head).get;
-      Class.forName(driver);
+    var port = request.body.get("port").map(_.head).get;
+    var dbname = request.body.get("dbname").map(_.head).get;
+    val url: String = "jdbc:mysql://" + hostname + ":" + port + "/" + dbname;
+    val driver = "com.mysql.jdbc.Driver";
+    val username = request.body.get("username").map(_.head).get;
+    val password = request.body.get("password").map(_.head).get;
+    Class.forName(driver);
 
-      val connection = DriverManager.getConnection(url, username, password);
+    val connection = DriverManager.getConnection(url, username, password);
 
-      var statement = connection.createStatement;
+    var statement = connection.createStatement;
 
-//
-//    var rsa = statement.executeQuery("SELECT * FROM answer");
-//    var rsMetaData = rsa.getMetaData();
-//
-//    val numberOfColumns: Int = rsMetaData.getColumnCount();
-//    var i = 0;
-//    for (  i <- 1 until numberOfColumns) {
-//      println(rsMetaData.getCatalogName(i));
-//      println(rsMetaData.getSchemaName(i));
-//  }
+    //
+    //    var rsa = statement.executeQuery("SELECT * FROM answer");
+    //    var rsMetaData = rsa.getMetaData();
+    //
+    //    val numberOfColumns: Int = rsMetaData.getColumnCount();
+    //    var i = 0;
+    //    for (  i <- 1 until numberOfColumns) {
+    //      println(rsMetaData.getCatalogName(i));
+    //      println(rsMetaData.getSchemaName(i));
+    //  }
 
 
+    var metaData: DatabaseMetaData = connection.getMetaData();
 
-    var metaData: DatabaseMetaData  = connection.getMetaData();
-    var foreignKeys: ResultSet  = metaData.getImportedKeys(connection.getCatalog(), null, "anwser");
-   while (foreignKeys.next()) {
-      println(foreignKeys.getString("PKTABLE_CAT"));
-     println("---------------------------")
-     println(foreignKeys.getString("PKTABLE_SCHEM"));
-     println("---------------------------")
-     println(foreignKeys.getString("PKTABLE_NAME"));
-     println("---------------------------")
-     println(foreignKeys.getString("PKCOLUMN_NAME"));
-     println("---------------------------")
-     println(foreignKeys.getString("FKTABLE_CAT"));
-     println("---------------------------")
-     println(foreignKeys.getString("FKTABLE_SCHEM"));
-     println("---------------------------")
-     println(foreignKeys.getString("FKTABLE_NAME"));
-     println("---------------------------")
-     println(foreignKeys.getString("FKCOLUMN_NAME"));
-     println("---------------------------")
-     println(foreignKeys.getString("KEY_SEQ"));
-     println("---------------------------")
 
-     println(foreignKeys.getString("FK_NAME"));
-     println("---------------------------")
+    // metadata
+    //    var resultSet: ResultSet = metaData.getColumns(null, null, "posts", null);
+    //    while (resultSet.next()) {
+    //      var name = resultSet.getString("COLUMN_NAME");
+    //      var `type` = resultSet.getString("TYPE_NAME");
+    //      var size = resultSet.getInt("COLUMN_SIZE");
+    //
+    //      System.out.println("Column name: [" + name + "]; type: [" + `type` + "]; size: [" + size + "]");
+    //    }
 
-     println(foreignKeys.getString("PK_NAME"));
-     println("---------------------------")
 
+    //    var foreignKeys: ResultSet  = metaData.getImportedKeys(connection.getCatalog(), null, "posts");
+    //
+    //
+    //    var tablesa: ResultSet = metaData.getPrimaryKeys(null, null, "posts");
+    //
+    //    while (tablesa.next()) {
+    //      var columnName = tablesa.getString("COLUMN_NAME");
+    //      println("getPrimaryKeys(): columnName=" + columnName);
+    //    }
+    //   while (foreignKeys.next()) {
+    //
+    //     println("---------------------------2")
+    //     println(foreignKeys.getString("PKTABLE_NAME")); // foreign table name
+    //     println(foreignKeys.getString("PKCOLUMN_NAME")); // primary key of foreign table
+    //     println("---------------------------3")
+    //
+    //
+    //
+    //     println("---------------------------6")
+    //     println(foreignKeys.getString("FKTABLE_NAME")); // table name
+    //     println(foreignKeys.getString("FKCOLUMN_NAME")); // foreign key
+    //
+    //
+    //    }
+    //
+    var rs = statement.executeQuery("SHOW TABLES");
+
+    while (rs.next) {
+
+      val tableName = rs.getString(1);
+      tables = tables :+ tableName;
     }
-//
-      var rs = statement.executeQuery("SHOW TABLES");
-
-      while (rs.next) {
-
-        val tableName = rs.getString(1);
-        tables = tables :+ tableName;
-      }
-//    } catch {
-//      case e: Exception => Ok(Json.obj("status" -> "KO", "message" -> ("Place '' saved.")))
-//    }
+    //    } catch {
+    //      case e: Exception => Ok(Json.obj("status" -> "KO", "message" -> ("Place '' saved.")))
+    //    }
     var message: String = "Successful connection";
     var status: Int = 200;
     //     nếu trống
@@ -180,6 +214,82 @@ class MetaDataController @Inject()(cc: ControllerComponents) extends AbstractCon
     }
     Ok(Json.obj("status" -> status, "message" -> (message), "tableNames" -> Json.toJson(tables)))
   }
+
+  def getMetaDataMYSQL() = Action(parse.tolerantFormUrlEncoded) { request =>
+    var tables = List[Table]();
+    var hostname = request.body.get("hostname").map(_.head).get;
+
+    var port = request.body.get("port").map(_.head).get;
+    var dbname = request.body.get("dbname").map(_.head).get;
+    val url: String = "jdbc:mysql://" + hostname + ":" + port + "/" + dbname;
+    val driver = "com.mysql.jdbc.Driver";
+    val username = request.body.get("username").map(_.head).get;
+    val password = request.body.get("password").map(_.head).get;
+    val tables_input = parseFull(request.body.get("tables_input")
+      .map(_.head).get).get.asInstanceOf[List[String]]
+    Class.forName(driver);
+
+    val connection = DriverManager.getConnection(url, username, password);
+
+    var metaData: DatabaseMetaData = connection.getMetaData();
+
+    for (table_name <- tables_input) {
+      var fields: List[Field] = List[Field]();
+
+      // get pk
+      var primary_key = "";
+      var pk_table: ResultSet = metaData.getPrimaryKeys(null, null, table_name);
+
+      while (pk_table.next()) {
+        primary_key = pk_table.getString("COLUMN_NAME");
+      } // end get pk
+
+      // get metadata
+      var resultSet: ResultSet = metaData.getColumns(null, null, table_name, null);
+      while (resultSet.next()) {
+        var name = resultSet.getString("COLUMN_NAME");
+        var `type` = resultSet.getString("TYPE_NAME");
+        var size = resultSet.getInt("COLUMN_SIZE");
+        var nullable = resultSet.getString("NULLABLE");
+
+        val field = Field(name, `type`, nullable, Length(size, 0), RelationshipField("", ""))
+        fields = field :: fields
+      } // end get metadata
+
+
+      var foreignKeys: ResultSet = metaData.getImportedKeys(connection.getCatalog(), null, table_name);
+
+      while (foreignKeys.next()) {
+//        println("---------------------------2")
+//        println(foreignKeys.getString("PKTABLE_NAME")); // foreign table name
+//        println(foreignKeys.getString("PKCOLUMN_NAME")); // primary key of foreign table
+//        println("---------------------------3")
+//
+//
+//        println("---------------------------6")
+//        println(foreignKeys.getString("FKTABLE_NAME")); // table name
+//        println(foreignKeys.getString("FKCOLUMN_NAME")); // foreign key
+
+        fields.map((field: Field) => {
+          var foreign_key = foreignKeys.getString("FKCOLUMN_NAME")
+          var foreign_table = foreignKeys.getString("PKTABLE_NAME")
+          var primary_key_foreign_table = foreignKeys.getString("PKCOLUMN_NAME")
+          if(field.name == foreign_key) {
+            field.relationship = RelationshipField(foreign_table, primary_key_foreign_table)
+          }
+        })
+      }
+      var table = Table(table_name, primary_key, fields, "")
+      tables = table :: tables
+    }
+
+
+
+    var message: String = "Successful connection";
+    var status: Int = 200;
+    Ok(Json.obj("status" -> "200", "message" -> "Success", "tables" -> Json.toJson(tables)))
+  }
+
 }
 
 

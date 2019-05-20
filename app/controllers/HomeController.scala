@@ -62,7 +62,7 @@ case class RelationshipField(var tableNane: String, var fieldName: String)
 
 case class Length(min: Int, max: Int)
 
-case class Field(var name: String, `type`: String, nullable: String, length: Length, relationship: RelationshipField)
+case class Field(var name: String, `type`: String, nullable: String, length: Length, var relationship: RelationshipField)
 
 case class Table(var name: String, var primaryKey: String, fields: Seq[Field], var path: String)
 

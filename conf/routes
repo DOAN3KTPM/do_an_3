@@ -9,6 +9,7 @@ POST     /getMetadataOfCollection            controllers.HomeController.getMetad
 #GET     /metadata                           controllers.MetaDataController.index
 POST     /checkConnectionMGDB                           controllers.MetaDataController.checkConnectionMGDB
 POST     /checkConnectionMYSQL                           controllers.MetaDataController.checkConnectionMYSQL
+POST     /getMetaDataMYSQL                           controllers.MetaDataController.getMetaDataMYSQL
 POST     /start                              controllers.HomeController.start
 #GET     /schemajson                           controllers.SchemaJsonController.index
 #GET     /specialcolumn                           controllers.SpecialCollumnController.index
