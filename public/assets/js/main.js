@@ -551,6 +551,7 @@ function saveConfigureMysql(input) {
 }
 
 function checkConnectMongodb(input) {
+    $('#select-all').removeClass('d-none')
     let parent = $(input).parents('#mongodbModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
@@ -594,6 +595,7 @@ function loadingMedata() {
 
  
 function checkConnectMysql(input) {
+    $('#select-all-1').removeClass('d-none')
     let parent = $(input).parents('#mysqlModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
@@ -633,3 +635,14 @@ function checkConnectMysql(input) {
 
 
 }
+
+
+$('#select_all').click(function() {
+    var c = this.checked;
+    $(':checkbox').prop('checked',c);
+});
+
+$('#select_all_1').click(function() {
+    var c = this.checked;
+    $(':checkbox').prop('checked',c);
+});
