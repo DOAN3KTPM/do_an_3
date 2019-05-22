@@ -57,7 +57,8 @@
                     <input class="btn btn-danger btn-block mb-3" id="Delete" onclick="myDiagram.commandHandler.deleteSelection()" type="button" value="Delete"/>
                     <input class="btn btn-info btn-block mb-3" id="Undo" onclick="myDiagram.commandHandler.undo()" type="button" value="Undo"/>
                     <input class="btn btn-dark btn-block" id="Redo" onclick="myDiagram.commandHandler.redo()" type="button" value="Redo"/>
-                    <input class="btn btn-success btn-block mt-5 mb-3" onclick="sendJson()" type="button" value="Migration"/>
+                    <input class="btn btn-success btn-block mt-5 mb-3" onclick="sendJsonMongodb()" type="button" value="Migration Mongodb"/>
+                    <input class="btn btn-primary btn-block mb-3" onclick="sendJsonMysql()" type="button" value="Migration Mysql"/>
                     <input class="btn btn-dark btn-block" onclick="updateJson()" type="button" value="Download Json"/>
                 </div>
             </div>
@@ -279,9 +280,10 @@
         var nodeData = new Array();
         var linkData = new Array();
         var dataName = $('#dbname-mg').val();
+
         // data_tables  global variable
         for (let table of data_tables) {
-
+            let primary_key =$('input[type="radio"][name="' + table.name + '"]:checked').val();
             var fields = new Array();
             for (let field of table.fields) {
 
@@ -291,8 +293,8 @@
                             name: field.name,
                             type: field.type,
                             rename: "0",
-                            figure: table.primaryKey == field.name ? "Key" : "Diamond",
-                            color: table.primaryKey == field.name ? "#ffc107" : "#7FBA00",
+                            figure: primary_key == field.name ? "Key" : "Diamond",
+                            color: primary_key == field.name ? "#ffc107" : "#7FBA00",
                         }
                 )
                 // check if exist relationship
@@ -311,10 +313,12 @@
                         dbname: dataName,
                         key: table.name,
                         fields: fields,
+                        primarykey: primary_key
                     }
             )
 
         }
+        console.log(nodeData)
         myRelate.model =
                 go.Model.fromJson({
                     copiesArrays: true,
@@ -325,6 +329,7 @@
                     linkDataArray: linkData
                 })
     }
+
 </script>
 
 <!--<div class='Cube panelLoad'>-->

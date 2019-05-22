@@ -351,4 +351,23 @@ $(document).on('focusout', '.row_data', function(event)
 
 
     // $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
+//
+// function sendJsonMysql(input) {
+//     $.ajax({
+//         method: "POST",
+//         url: "/start",
+//         data: {
+//             hostname,
+//             dbname,
+//             username,
+//             password,
+//             port,
+//             myRelate.model.toJson()
+//         },
+//             success: function (data) {
+//                 console.log(data)
+//             }
+//         });
+//
+// }
 

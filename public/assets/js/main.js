@@ -21,15 +21,17 @@ function init() {
                 let models = myDiagram.model;
                 let arrayLinks = JSON.parse(models.toJson()).linkDataArray
 
-                let modelLink = arrayLinks.filter(link => link.to == data.key);
+                let modelLink = arrayLinks.filter(link => link.to == data.key
+            )
+                ;
 
                 let keyLink = null;
                 if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
                     keyLink = modelLink[0].from
-                     //
+                    //
                     let collectionNames = new Array()
                     let hostname, dbname, port = "";
-             
+
                     var dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
 
@@ -38,12 +40,12 @@ function init() {
                     username = dataLink.username
                     password = dataLink.password
                     port = dataLink.port
-                    loadMySqlSQLModal(hostname, dbname, username, password, port, collectionNames)
-                }else{
+                    loadMySqlGetData(hostname, dbname, username, password, port, collectionNames)
+                } else {
                     let hostname = data.hostname ? data.hostname : 'localhost'
                     let port = data.port ? data.port : '27017'
                     let collectionNames = data.collectionNames ? data.collectionNames : []
-                    loadMysqlModal(hostname, port, data.key, collectionNames)
+                    loadMongodbModal(hostname, port, data.key, collectionNames)
                 }
                 break;
             }
@@ -51,14 +53,16 @@ function init() {
                 let models = myDiagram.model;
                 let arrayLinks = JSON.parse(models.toJson()).linkDataArray
 
-                let modelLink = arrayLinks.filter(link => link.to == data.key);
+                let modelLink = arrayLinks.filter(link => link.to == data.key
+            )
+                ;
 
                 let keyLink = null;
                 if (typeof modelLink !== 'undefined' && modelLink.length > 0) {
                     keyLink = modelLink[0].from
-                     //
-                let collectionNames = new Array()
-                let hostname, dbname, port = "";
+                    //
+                    let collectionNames = new Array()
+                    let hostname, dbname, port = "";
 
                     var dataLink = models.findNodeDataForKey(keyLink);
                     collectionNames = dataLink.collectionNames
@@ -66,8 +70,8 @@ function init() {
                     hostname = dataLink.hostname
                     dbname = dataLink.dbname
                     port = dataLink.port
-                    loadSQLModal(hostname, dbname, port, collectionNames)
-                }else{
+                    loadMongodbGetData(hostname, dbname, port, collectionNames)
+                } else {
                     let hostname = data.hostname ? data.hostname : 'localhost'
                     let port = data.port ? data.port : '3306'
                     let collectionNames = data.collectionNames ? data.collectionNames : []
@@ -76,7 +80,7 @@ function init() {
                 // send host name port collectionName to query
                 // get meta data
 
-                
+
                 break;
             }
         }
@@ -354,6 +358,7 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
     $('#mongodbModal .collections').html(html)
 
     $('#mongodbModal').modal('show');
+
 }
 
 //  load mongodb modal
@@ -373,7 +378,7 @@ function loadMysqlModal(hostname, port, key, collectionNames) {
 }
 
 // load sql modal
-function loadMySqlSQLModal(hostname, dbname,username, password, port, collectionNames) {
+function loadMySqlGetData(hostname, dbname, username, password, port, collectionNames) {
 
     $.ajax({
         method: "POST",
@@ -410,10 +415,16 @@ function loadMySqlSQLModal(hostname, dbname,username, password, port, collection
                     for (let field of  table.fields) {
                         i++
                         html += `<tr>
-    <th scope="row"><input type="checkbox" id="primary-key" value="1"/></th>
-      <td>${field.name}</td>
-      <td>${field.type}</td>
-    </tr>`
+                            <th scope="row">`;
+                        if(field.name === table.primaryKey) {
+                            html += `<input type="radio" class="primary-key" name="${table.name}" value="${field.name}" checked/></th>`
+                        } else {
+                            html += `<input type="radio" class="primary-key" name="${table.name}" value="${field.name}"/></th>`
+                        }
+
+                        html += `<td>${field.name}</td>
+                          <td>${field.type}</td>
+                        </tr>`
                     }
 
 
@@ -433,20 +444,17 @@ function loadMySqlSQLModal(hostname, dbname,username, password, port, collection
     })
 
 
-
 }
 
 // load sql modal
-function loadSQLModal(hostname, dbname,username, password, port, collectionNames) {
+function loadMongodbGetData(hostname, dbname, port, collectionNames) {
 
     $.ajax({
         method: "POST",
-        url: "/getMetaDataMYSQL",
+        url: "/getMetadataOfCollection",
         data: {
             hostname,
             dbname,
-            username,
-            password,
             port,
             collectionNames: JSON.stringify(collectionNames)
         },
@@ -474,10 +482,16 @@ function loadSQLModal(hostname, dbname,username, password, port, collectionNames
                     for (let field of  table.fields) {
                         i++
                         html += `<tr>
-    <th scope="row"><input type="checkbox" id="primary-key" value="1"/></th>
-      <td>${field.name}</td>
-      <td>${field.type}</td>
-    </tr>`
+                            <th scope="row">`;
+                        if(field.name === table.primaryKey) {
+                            html += `<input type="radio" class="primary-key" name="${table.name}" value="${field.name}" checked/></th>`
+                        } else {
+                            html += `<input type="radio" class="primary-key" name="${table.name}" value="${field.name}"/></th>`
+                        }
+
+                        html += `<td>${field.name}</td>
+                          <td>${field.type}</td>
+                        </tr>`
                     }
 
 
@@ -497,8 +511,8 @@ function loadSQLModal(hostname, dbname,username, password, port, collectionNames
     })
 
 
-
 }
+
 function saveConfigureMongodb(input) {
 
     let key = $(input).attr('data-key')
@@ -506,8 +520,8 @@ function saveConfigureMongodb(input) {
     let parent = $(input).parents('#mongodbModal')
     let hostname = parent.find('#hostname-mg').val()
     let dbname = parent.find('#dbname-mg').val()
-
     let port = parent.find('#port-mg').val()
+
     let collectionElements = parent.find('[name="collections"]:checked');
     let collectionNames = new Array();
     for (let element of collectionElements) {
@@ -520,7 +534,10 @@ function saveConfigureMongodb(input) {
     nodeData.dbname = dbname
     nodeData.collectionNames = collectionNames
     $('#mongodbModal').modal('hide');
+    Cookies.set('showJson', {hostname, dbname, port});
 }
+
+
 
 function saveConfigureMysql(input) {
 
@@ -593,7 +610,7 @@ function loadingMedata() {
 
 }
 
- 
+
 function checkConnectMysql(input) {
     $('#select-all-1').removeClass('d-none')
     let parent = $(input).parents('#mysqlModal')
@@ -637,12 +654,12 @@ function checkConnectMysql(input) {
 }
 
 
-$('#select_all').click(function() {
+$('#select_all').click(function () {
     var c = this.checked;
-    $(':checkbox').prop('checked',c);
+    $(':checkbox').prop('checked', c);
 });
 
-$('#select_all_1').click(function() {
+$('#select_all_1').click(function () {
     var c = this.checked;
-    $(':checkbox').prop('checked',c);
+    $(':checkbox').prop('checked', c);
 });
