@@ -352,22 +352,44 @@ $(document).on('focusout', '.row_data', function(event)
 
     // $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
 //
-// function sendJsonMysql(input) {
-//     $.ajax({
-//         method: "POST",
-//         url: "/start",
-//         data: {
-//             hostname,
-//             dbname,
-//             username,
-//             password,
-//             port,
-//             myRelate.model.toJson()
-//         },
-//             success: function (data) {
-//                 console.log(data)
-//             }
-//         });
-//
-// }
+function sendJsonMysql(input) {
+    var dataModalMysql = JSON.parse(Cookies.get("showJsonMysql"))
+    let hostname = dataModalMysql.hostname
+    let dbname = dataModalMysql.dbname
+    let username = dataModalMysql.username
+    let password = dataModalMysql.password
+    let port = dataModalMysql.port
+    $.ajax({
+        method: "POST",
+        url: "/start",
+        data: {
+            hostname,
+            dbname,
+            username,
+            password,
+            port,
+        },
+            success: function (data) {
+                console.log(data)
+            }
+        });
+}
 
+function sendJsonMongodb(input) {
+    var dataModalMongodb = JSON.parse(Cookies.get("showJsonMongodb"))
+    let hostname = dataModalMongodb.hostname
+    let dbname = dataModalMongodb.dbname
+    let port = dataModalMongodb.port
+    $.ajax({
+        method: "POST",
+        url: "/start",
+        data: {
+            hostname,
+            dbname,
+            port,
+        },
+        success: function (data) {
+            console.log(data)
+        }
+    });
+}

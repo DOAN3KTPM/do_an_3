@@ -42,10 +42,12 @@ function init() {
                     port = dataLink.port
                     loadMySqlGetData(hostname, dbname, username, password, port, collectionNames)
                 } else {
-                    let hostname = data.hostname ? data.hostname : 'localhost'
-                    let port = data.port ? data.port : '27017'
+                    let hostname = data.hostname || 'localhost'
+                    let port = data.port || '27017'
+                    let dbname = data.dbname || ''
                     let collectionNames = data.collectionNames ? data.collectionNames : []
-                    loadMongodbModal(hostname, port, data.key, collectionNames)
+                    Cookies.set("showJsonMongodb", {hostname,port,dbname})
+                    loadMongodbModal(data.key, collectionNames)
                 }
                 break;
             }
@@ -72,10 +74,14 @@ function init() {
                     port = dataLink.port
                     loadMongodbGetData(hostname, dbname, port, collectionNames)
                 } else {
-                    let hostname = data.hostname ? data.hostname : 'localhost'
-                    let port = data.port ? data.port : '3306'
+                    let hostname = data.hostname || 'localhost'
+                    let port = data.port || '3306'
+                    let username = data.username || 'root'
+                    let password = data.password || ''
+                    let dbname = data.dbname || ''
                     let collectionNames = data.collectionNames ? data.collectionNames : []
-                    loadMysqlModal(hostname, port, data.key, collectionNames)
+                    Cookies.set("showJsonMysql", {hostname,port,username,password,dbname})
+                    loadMysqlModal(data.key, collectionNames)
                 }
                 // send host name port collectionName to query
                 // get meta data
@@ -345,9 +351,12 @@ $('input[type=file]').change(function () {
 });
 
 //  load mongodb modal
-function loadMongodbModal(hostname, port, key, collectionNames) {
-    $('#mongodbModal').find('#hostname-mg').val(hostname)
-    $('#mongodbModal').find('#port-mg').val(port)
+function loadMongodbModal(key, collectionNames) {
+    var jsonMongodb = JSON.parse(Cookies.get("showJsonMongodb"))
+
+    $('#mongodbModal').find('#hostname-mg').val(jsonMongodb.hostname)
+    $('#mongodbModal').find('#port-mg').val(jsonMongodb.port)
+    $('#mongodbModal').find('#dbname-mg').val(jsonMongodb.dbname)
     $('#mongodbModal').find('.save').attr('data-key', key)
     let html = "";
     for (var name of collectionNames) {
@@ -362,9 +371,13 @@ function loadMongodbModal(hostname, port, key, collectionNames) {
 }
 
 //  load mongodb modal
-function loadMysqlModal(hostname, port, key, collectionNames) {
-    $('#mysqlModal').find('#hostname-mg').val(hostname)
-    $('#mysqlModal').find('#port-mg').val(port)
+function loadMysqlModal(key, collectionNames) {
+    var jsonMysql = JSON.parse(Cookies.get("showJsonMysql"))
+    $('#mysqlModal').find('#hostname-mg').val(jsonMysql.hostname)
+    $('#mysqlModal').find('#port-mg').val(jsonMysql.port)
+    $('#mysqlModal').find('#username-mg').val(jsonMysql.username)
+    $('#mysqlModal').find('#pass-mg').val(jsonMysql.password)
+    $('#mysqlModal').find('#dbname-mg').val(jsonMysql.dbname)
     $('#mysqlModal').find('.save').attr('data-key', key)
     let html = "";
     for (var name of collectionNames) {
@@ -534,7 +547,6 @@ function saveConfigureMongodb(input) {
     nodeData.dbname = dbname
     nodeData.collectionNames = collectionNames
     $('#mongodbModal').modal('hide');
-    Cookies.set('showJson', {hostname, dbname, port});
 }
 
 

@@ -52,10 +52,7 @@ import scala.io.Source
 import net.liftweb.json._
 import function.my_function._
 import java.sql.{DriverManager, ResultSet}
-/**
-  * This controller creates an `Action` to handle HTTP requests to the
-  * application's home page.
-  */
+
 case class Relationship(fieldName: String, `type`: String)
 
 case class RelationshipField(var tableNane: String, var fieldName: String)
@@ -170,20 +167,21 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       sparkSession.close()
     }
 
-    for (collection_name_search <- listCollectionNames) {
+    var searched_collections = listCollectionNames;
+    for (collection_name <- listCollectionNames) {
 
       // get unique columns
-      var unique_columns: List[String] = getUniqueColumnsOfTable(dbname, collection_name_search)
+      var unique_columns: List[String] = getUniqueColumnsOfTable(dbname, collection_name)
 
-      var results = database.getCollection(collection_name_search).find.limit(10);
+      var results = database.getCollection(collection_name).find.limit(10);
       results.subscribe(new Observer[Document] {
         override def onNext(doc: Document) = {
           // looping others to find relationship
-          for (collection_name <- listCollectionNames) {
+          for (searched_collection_name <- searched_collections) {
 
-            if (collection_name != collection_name_search) {
-              var columnsTypeArray = getColumnsTypeArray(collection_name)
-              var columnsTypeNormal = getColumnsTypeNormal(collection_name) // INT, STRING ...
+            if (searched_collection_name != collection_name) {
+              var columnsTypeArray = getColumnsTypeArray(searched_collection_name)
+              var columnsTypeNormal = getColumnsTypeNormal(searched_collection_name) // INT, STRING ...
 
               // loop column (cr)
               for (column_name <- unique_columns) {
@@ -197,7 +195,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                     // get values of collumn
                     var isNext = true
-                    var searchValue = database.getCollection(collection_name).find();
+                    var searchValue = database.getCollection(searched_collection_name).find();
                     searchValue.subscribe(new Observer[Document] {
                       override def onNext(doc_search: Document) = {
 
@@ -220,8 +218,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
                         // Found
 
                         if (listValues.contains(doc_value)) {
-                          setPrimaryKeyForTable(collection_name_search, column_name)
-                          setFoKeyForeignKeyForTable(collection_name, collumnName, collection_name_search, column_name)
+                          setPrimaryKeyForTable(collection_name, column_name)
+                          setFoKeyForeignKeyForTable(searched_collection_name, collumnName, collection_name, column_name)
                         }
 
 
@@ -239,7 +237,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                   // find in comlumn 1-1
                   for (collumnName <- columnsTypeNormal) {
-                    var searchValue = database.getCollection(collection_name).find();
+                    var searchValue = database.getCollection(searched_collection_name).find();
                     searchValue.subscribe(new Observer[Document] {
                       override def onNext(doc_search: Document) = {
                         // lấy các giá trị của doccument có type là array ([1, 2, 3, 4] => List(1,2,3,4))
@@ -256,8 +254,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                         // Found
                         if (value_search == doc_value) {
-                          setPrimaryKeyForTable(collection_name_search, column_name)
-                          setFoKeyForeignKeyForTable(collection_name, collumnName, collection_name_search, column_name)
+                          setPrimaryKeyForTable(collection_name, column_name)
+                          setFoKeyForeignKeyForTable(searched_collection_name, collumnName, collection_name, column_name)
                         }
 
 
@@ -282,7 +280,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                       // get values of collumn
 
-                      var searchValue = database.getCollection(collection_name).find();
+                      var searchValue = database.getCollection(searched_collection_name).find();
                       searchValue.subscribe(new Observer[Document] {
                         override def onNext(doc_search: Document) = {
 
@@ -306,8 +304,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                           // Found
                           if (listValues.contains(doc_id)) {
-                            setPrimaryKeyForTable(collection_name_search, column_name)
-                            setFoKeyForeignKeyForTable(collection_name, collumnName, collection_name_search, column_name)
+                            setPrimaryKeyForTable(collection_name, column_name)
+                            setFoKeyForeignKeyForTable(searched_collection_name, collumnName, collection_name, column_name)
                           }
 
 
@@ -325,7 +323,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                     // find in comlumn 1-1
                     for (collumnName <- columnsTypeNormal) {
-                      var searchValue = database.getCollection(collection_name).find();
+                      var searchValue = database.getCollection(searched_collection_name).find();
                       searchValue.subscribe(new Observer[Document] {
                         override def onNext(doc_search: Document) = {
 
@@ -341,8 +339,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
                           // Found
                           if (value_search == doc_id) {
-                            setPrimaryKeyForTable(collection_name_search, column_name)
-                            setFoKeyForeignKeyForTable(collection_name, collumnName, collection_name_search, column_name)
+                            setPrimaryKeyForTable(collection_name, column_name)
+                            setFoKeyForeignKeyForTable(searched_collection_name, collumnName, collection_name, column_name)
                           }
 
 
@@ -590,7 +588,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         fieldMap.get("name").get != "_id" &&
         fieldMap.get("type").get.isInstanceOf[String]) {
 
-        primaryKey = fieldMap.get("name").get.toString;
+//        primaryKey = fieldMap.get("name").get.toString;
+        primaryKey = "_id";
 
         return primaryKey;
       }
