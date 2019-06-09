@@ -819,12 +819,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     }
     list_key
   }
+
   def start() = Action { implicit req =>
-    val lines = Source.fromFile("D:\\DoAn3\\Json\\document.json").mkString
-    val json = net.liftweb.json.parse(lines)
+    var t1 = System.nanoTime()
+    val lines = Source.fromFile("D:\\DoAn3\\Json\\School.json").mkString
+    var string_lines = lines.substring(0,lines.indexOf("{"))
+    var list_item = string_lines.split("[\\r\\n]")
+    var string_json = lines.substring(lines.indexOf("{")-1)
+    val json = net.liftweb.json.parse(string_json)
     var list_collection = getElement("key", json)
-    val database = getElement("dbname", json)
-    val db = database(0)
+    //    val database = getElement("dbname", json)
+    val database = list_item.find(p => p.contains("dbname: ")).mkString
+    val db = database.replaceFirst("dbname: ","")
     var db_name: String = db
     var i = 0
     if (CheckDBExist(db_name)) {
@@ -843,6 +849,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     Create_DB("CREATE DATABASE " + db_name)
     //    *****************************
+
     val conn_str = "jdbc:mysql://localhost:3306/" + db_name + "?user=root&password="
 
     // Load the driver
@@ -856,8 +863,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     var key,collect = ""
     for (h <- 0 to list_json.length -1) {
       if(list_json(h) != "" && list_json(h) != " ") {
-        var js = net.liftweb.json.parse(list_json(h))
-        var collection = getElement("key",js)
+        val js = net.liftweb.json.parse(list_json(h))
+        val collection = getElement("key",js)
         val mongoConn = MongoConnection()
         if(collection(0).contains("/")){
           key = collection(0).substring(collection(0).indexOf("/")+1)
@@ -899,9 +906,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
             list_tb1_old = getElement(js, "name", i) + ":" + getType(js, i) :: list_tb1_old
           }
         }
-        var index_id = list_tb1_old.indexWhere(p => p.contains("_id"))
-        var id = list_tb1(index_id)
-        id = id.substring(0, id.indexOf(":"))
+        val list_id = getElement("primarykey",js)
+        val id = list_id(0)
         var l_tb1: List[String] = List()
         if(key == collection) {
           var res = mongoColl.findOne().mkString
@@ -943,10 +949,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
             if (n_type == "string" || n_type == "struct" || n_type == "array") {
               sql_1 += "text,"
             } else {
-              sql_1 += n_type + ","
+              if (n_type == "") {
+                sql_1 += "varchar(255),"
+              } else {
+                sql_1 += n_type + ","
+              }
             }
           } else {
-            sql_1 += "varchar(255),"
+            if (n_type == "") {
+              sql_1 += "varchar(255),"
+            } else {
+              sql_1 += n_type + ","
+            }
           }
         }
         sql_1 = sql_1.substring(0, sql_1.length - 1) + ", PRIMARY KEY (" + id + "))"
@@ -1021,7 +1035,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
                 for (k <- 0 to list_tb1_old.length - 1) {
                   a = a.replaceAll("\"" + list_tb1_old(k) + "\" :", "")
                 }
-                println(a)
                 a = a. replaceAll("[}], [{]", "), (")
                 a = a.replaceAll("[{]", "")
                   .replaceAll("[}]", "")
@@ -1040,7 +1053,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
               if (i == 1000 || (i == (size - 1000 * n) && (dem == size))) {
                 sql_tb = sql_tb.substring(0, sql_tb.length - 1)
                 try {
-                  println(sql_tb)
                   statement.executeUpdate(sql_tb)
                 }
                 i = 0
@@ -1074,6 +1086,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
                 sql_tb = sql_tb.substring(0, sql_tb.length - 1)
                 try {
                   statement.executeUpdate(sql_tb)
+                }catch {
+                  case unknownError: UnknownError =>
                 }
                 i = 0
                 sql_tb = "INSERT INTO " + key + " Values"
@@ -1083,8 +1097,91 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         }
       }
     }
+    // *******lấy quan hệ
+    var relation_json = lines.substring(lines.indexOf("\"linkDataArray\": [")+20)
+    relation_json = relation_json.substring(0,relation_json.length-4)
+    relation_json = relation_json.replaceAll("[\\r\\n]","")
+    var relation = relation_json.split("},")
+    //***********************
+    var add_relation = ""
+    for(i <-0 to relation.length -1){
+      if(relation(i) != "" || relation(i) != " ") {
+        if(!relation(i).contains("}")){
+          relation(i) += "}"
+        }
+        var list_key : List[String] = List()
+        val rel = net.liftweb.json.parse(relation(i))
+        val table_from = getElement("from", rel)
+        val port_from = getElement("fromPort", rel)
+        val table_to = getElement("to", rel)
+        val port_to = getElement("toPort", rel)
+        list_key = port_from(0) :: list_key
+        list_key = port_to(0) :: list_key
+        add_relation = "ALTER TABLE " + table_to(0) + " ADD FOREIGN KEY (" +port_from(0)+ ") REFERENCES " +table_from(0)+ "(" +port_to(0)+ ");"
+        try{
+          statement.executeUpdate(add_relation)
+        }
+      }
+    }
     conn.close()
-    var t2 = "Time run : " + (System.nanoTime() - t1) / 1e9d
-    Ok(t2)
+    Ok("Time run : " + (System.nanoTime() - t1) / 1e9d)
+  }
+
+  def mysql() = Action { implicit req =>
+    val t1 = System.nanoTime()
+    val lines = Source.fromFile("D:\\DoAn3\\Json\\mysql.json").mkString
+    var string_lines = lines.substring(0,lines.indexOf("{"))
+    var list_item = string_lines.split("[\\r\\n]")
+    val json = lines.substring(lines.indexOf("{")-1)
+    val js = net.liftweb.json.parse(json)
+    var list_table = getElement("key",js)
+    var hostname = list_item.find(p => p.contains("hostname: ")).mkString
+    hostname = hostname.replaceFirst("hostname: ","")
+    var database = list_item.find(p => p.contains("dbname: ")).mkString
+    database = database.replaceFirst("dbname: ","")
+    var user = list_item.find(p => p.contains("username: ")).mkString
+    user = user.replaceFirst("username: ","")
+    var pass = list_item.find(p => p.contains("password: ")).mkString
+    pass = pass.replaceFirst("password: ","")
+    var port = list_item.find(p => p.contains("port: ")).mkString
+    port = port.replaceFirst("port: ","")
+    val conn_str = "jdbc:mysql://"+hostname+":"+port+"/"+database+"?user="+user+"&password="+pass
+    // Load the driver
+    classOf[com.mysql.jdbc.Driver]
+    // Setup the connection
+    val conn = DriverManager.getConnection(conn_str)
+    val statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+    val mongo_url = MongoClientURI("mongodb://127.0.0.1:27017")
+    //    val mongoClient: MongoClient = MongoClient(mongo_url)
+    val mongoClient = MongoClient("localhost",27017)
+    val format = new SimpleDateFormat("d-M-y")
+    var day = format.format(Calendar.getInstance().getTime())
+    val mongoDB = database+"_Convert"
+    val db = mongoClient(mongoDB)
+    val builder = MongoDBObject.newBuilder
+    builder += "ok" -> 1
+    val newObj = builder.result
+    val mongoConn = MongoConnection()
+    for(i <- 0 to list_table.length -1) {
+      db.createCollection(list_table(i),newObj) //create collection in mongodb
+      val mongoColl = mongoConn(mongoDB)(list_table(i)) // connect to mongodb  with collection
+      var sql = "SELECT * FROM "+list_table(i)
+      var results = statement.executeQuery(sql)
+      while (results.next()) {
+        val numColumns = results.getMetaData.getColumnCount
+        var json = "{"
+        val builder = MongoDBObject.newBuilder
+        for (i <- 1 to numColumns) {
+          val columns = results.getMetaData.getColumnName(i)
+          var content = results.getObject(columns)
+          json += "\"" + columns + "\":\"" + content + "\","
+          builder += columns -> content
+        }
+        json = json.substring(0, json.length - 1) + "}"
+        val newObj = builder.result
+        mongoColl.insert(newObj)
+      }
+    }
+    Ok("Time run : " + (System.nanoTime() - t1) / 1e9d)
   }
 }
