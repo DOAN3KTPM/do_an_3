@@ -11,6 +11,7 @@ POST     /checkConnectionMGDB                           controllers.MetaDataCont
 POST     /checkConnectionMYSQL                           controllers.MetaDataController.checkConnectionMYSQL
 POST     /getMetaDataMYSQL                           controllers.MetaDataController.getMetaDataMYSQL
 POST     /start                              controllers.HomeController.start
+POST     /mysql                              controllers.HomeController.mysql
 #GET     /schemajson                           controllers.SchemaJsonController.index
 #GET     /specialcolumn                           controllers.SpecialCollumnController.index
 #POST    /getMetaTable               controllers.HomeController.getMetaTable
