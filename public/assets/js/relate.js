@@ -127,7 +127,7 @@ function initRelate() {
                 )  // end Table Panel of items
             )  // end Vertical Panel
         );  // end Node
-        myRelate.model = go.Model.fromJson(JSON.parse(Cookies.get('modelJson')));
+        myRelate.model = go.Model.fromJson(JSON.parse(Cookies.get('modelJson') || '{}'));
     myRelate.linkTemplate =
         $(go.Link,
             {
@@ -354,6 +354,7 @@ $(document).on('focusout', '.row_data', function(event)
 //
 function sendJsonMysql(input) {
     var dataModalMysql = JSON.parse(Cookies.get("showJsonMysql"))
+    var dataArrayMysql =  myRelate.model.toJson();
     let hostname = dataModalMysql.hostname
     let dbname = dataModalMysql.dbname
     let username = dataModalMysql.username
@@ -368,6 +369,13 @@ function sendJsonMysql(input) {
             username,
             password,
             port,
+            dataArrayMysql,
+        },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
         },
             success: function (data) {
                 console.log(data)
@@ -377,6 +385,7 @@ function sendJsonMysql(input) {
 
 function sendJsonMongodb(input) {
     var dataModalMongodb = JSON.parse(Cookies.get("showJsonMongodb"))
+    var dataArrayMongodb =  myRelate.model.toJson();
     let hostname = dataModalMongodb.hostname
     let dbname = dataModalMongodb.dbname
     let port = dataModalMongodb.port
@@ -387,6 +396,13 @@ function sendJsonMongodb(input) {
             hostname,
             dbname,
             port,
+            dataArrayMongodb,
+        },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
         },
         success: function (data) {
             console.log(data)

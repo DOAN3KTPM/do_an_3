@@ -46,7 +46,7 @@ function init() {
                     let port = data.port || '27017'
                     let dbname = data.dbname || ''
                     let collectionNames = data.collectionNames ? data.collectionNames : []
-                    Cookies.set("showJsonMongodb", {hostname,port,dbname})
+                    Cookies.set("showJsonMongodb", {hostname,port,dbname,collectionNames})
                     loadMongodbModal(data.key, collectionNames)
                 }
                 break;
@@ -80,7 +80,7 @@ function init() {
                     let password = data.password || ''
                     let dbname = data.dbname || ''
                     let collectionNames = data.collectionNames ? data.collectionNames : []
-                    Cookies.set("showJsonMysql", {hostname,port,username,password,dbname})
+                    Cookies.set("showJsonMysql", {hostname,port,username,password,dbname, collectionNames})
                     loadMysqlModal(data.key, collectionNames)
                 }
                 // send host name port collectionName to query
@@ -404,6 +404,12 @@ function loadMySqlGetData(hostname, dbname, username, password, port, collection
             port,
             tables_input: JSON.stringify(collectionNames)
         },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
+        },
         success: function (data) {
             data_tables = data.tables // global
             let dataCollections = data.tables
@@ -470,6 +476,12 @@ function loadMongodbGetData(hostname, dbname, port, collectionNames) {
             dbname,
             port,
             collectionNames: JSON.stringify(collectionNames)
+        },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
         },
         success: function (data) {
             data_tables = data.tables // global
@@ -593,6 +605,12 @@ function checkConnectMongodb(input) {
             dbname,
             port
         },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
+        },
         success: function (data) {
             console.log(data)
             let html = "";
@@ -640,6 +658,12 @@ function checkConnectMysql(input) {
             username,
             password,
             port
+        },
+        beforeSend: function() {
+            $("#myModalLoad").show();
+        },
+        complete: function() {
+            $("#myModalLoad").hide();
         },
         success: function (data) {
             console.log(data)
