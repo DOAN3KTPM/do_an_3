@@ -1120,6 +1120,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       relation_json = relation_json.substring(0, relation_json.length - 4)
       relation_json = relation_json.replaceAll("[\\r\\n]", "")
       var relation = relation_json.split("},")
+      println(relation_json)
       //***********************
       var add_relation = ""
       for (i <- 0 to relation.length - 1) {
@@ -1135,7 +1136,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           val port_to = getElement("toPort", rel)
           list_key = port_from(0) :: list_key
           list_key = port_to(0) :: list_key
-          add_relation = "ALTER TABLE " + table_to(0) + " ADD FOREIGN KEY (" + port_to(0)+ ") REFERENCES " + table_from(0) + "(" + port_from(0)  + ");"
+          add_relation = "ALTER TABLE " + table_from(0) + " ADD FOREIGN KEY (" + port_from(0)+ ") REFERENCES " + table_to(0) + "(" + port_to(0)  + ");"
           println(add_relation)
           try {
             statement.executeUpdate(add_relation)
