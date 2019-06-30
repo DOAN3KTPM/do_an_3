@@ -362,7 +362,7 @@ function sendJsonMysql(input) {
     let port = dataModalMysql.port
     $.ajax({
         method: "POST",
-        url: "/start",
+        url: "/mysql",
         data: {
             hostname,
             dbname,
