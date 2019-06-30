@@ -127,7 +127,7 @@ function initRelate() {
                 )  // end Table Panel of items
             )  // end Vertical Panel
         );  // end Node
-        myRelate.model = go.Model.fromJson(JSON.parse(Cookies.get('modelJson') || '{}'));
+        myRelate.model = go.Model.fromJson(typeof Cookies.get('modelData') !== 'undefined' ? JSON.parse(Cookies.get('modelJson')) : {});
     myRelate.linkTemplate =
         $(go.Link,
             {

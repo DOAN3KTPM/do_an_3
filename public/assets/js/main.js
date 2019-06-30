@@ -264,7 +264,7 @@ function init() {
 
     // The following code overrides GoJS focus to stop the browser from scrolling
     // the page when either the Diagram or Palette are clicked or dragged onto.
-    myDiagram.model = go.Model.fromJson(JSON.parse(Cookies.get('modelData')));
+    myDiagram.model = go.Model.fromJson(typeof Cookies.get('modelData') !== 'undefined' ? JSON.parse(Cookies.get('modelData')) : {});
 
     function customFocus() {
         var x = window.scrollX || window.pageXOffset;
@@ -558,6 +558,7 @@ function saveConfigureMongodb(input) {
     nodeData.port = port
     nodeData.dbname = dbname
     nodeData.collectionNames = collectionNames
+    Cookies.set("showJsonMongodb", nodeData)
     $('#mongodbModal').modal('hide');
 }
 
@@ -587,7 +588,7 @@ function saveConfigureMysql(input) {
     nodeData.username = username
     nodeData.password = password
     nodeData.collectionNames = collectionNames
-
+    Cookies.set("showJsonMysql", nodeData)
     $('#mysqlModal').modal('hide');
 }
 

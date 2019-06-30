@@ -258,6 +258,7 @@
     $(window).on("beforeunload", function () {
         Cookies.set('modelJson', myRelate.model.toJson());
     })
+
     $('input[type=file]').change(function () {
         var files = document.getElementById('import').files;
 
@@ -327,6 +328,7 @@
                     nodeDataArray: nodeData,
                     linkDataArray: linkData
                 })
+        $('#sqlModal').modal('hide');
     }
 
 </script>
