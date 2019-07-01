@@ -52,9 +52,9 @@ function initRelate() {
             new go.Binding("portId", "name"),  // this Panel is a "port"
             {
                 background: "transparent",  // so this port's background can be
-                                            // picked by the mouse
+                // picked by the mouse
                 fromSpot: go.Spot.Right,  // links only go from the right side
-                                          // to the left side
+                // to the left side
                 toSpot: go.Spot.Left,
                 // allow drawing links from or to this port:
                 fromLinkable: true, toLinkable: true
@@ -91,19 +91,19 @@ function initRelate() {
     // This template represents a whole "record".
     myRelate.nodeTemplate =
         $(go.Node, "Auto",
-            {copyable: false, deletable: false},
+            { copyable: false, deletable: false },
             new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
             // this rectangular shape surrounds the content of the node
             $(go.Shape,
-                {fill: "#EEEEEE"}),
+                { fill: "#EEEEEE" }),
             // the content consists of a header and a list of items
             $(go.Panel, "Vertical",
                 // this is the header for the whole node
                 $(go.Panel, "Auto",
-                    {stretch: go.GraphObject.Horizontal},  // as wide as the
-                                                           // whole node
+                    { stretch: go.GraphObject.Horizontal },  // as wide as the
+                    // whole node
                     $(go.Shape,
-                        {fill: "#1570A6", stroke: null}),
+                        { fill: "#1570A6", stroke: null }),
                     $(go.TextBlock,
                         {
                             alignment: go.Spot.Center,
@@ -127,16 +127,16 @@ function initRelate() {
                 )  // end Table Panel of items
             )  // end Vertical Panel
         );  // end Node
-        myRelate.model = go.Model.fromJson(typeof Cookies.get('modelData') !== 'undefined' ? JSON.parse(Cookies.get('modelJson')) : {});
+    myRelate.model = go.Model.fromJson(typeof Cookies.get('modelData') !== 'undefined' ? JSON.parse(Cookies.get('modelJson')) : {});
     myRelate.linkTemplate =
         $(go.Link,
             {
                 relinkableFrom: true, relinkableTo: true, // let user reconnect
-                                                          // links
+                // links
                 toShortLength: 4, fromShortLength: 2
             },
-            $(go.Shape, {strokeWidth: 1.5}),
-            $(go.Shape, {toArrow: "Standard", stroke: null})
+            $(go.Shape, { strokeWidth: 1.5 }),
+            $(go.Shape, { toArrow: "Standard", stroke: null })
         );
 
     showModel();  // show the diagram's initial model
@@ -150,7 +150,7 @@ function initRelate() {
 function showJsonModal(html) {
     $("#jsonModal .modal-body").html(html);
     $(document).find('.btn_save').hide();
-    $(document).find('.btn_cancel').hide(); 
+    $(document).find('.btn_cancel').hide();
     // $('.json').Tabledit({
     //     url: window.location.href,
     //     removeButton: false,
@@ -174,26 +174,23 @@ function saveJson(input) {
 }
 
 //--->make div editable > start
-$(document).on('click', '.row_data', function(event) 
-{
-    event.preventDefault(); 
+$(document).on('click', '.row_data', function (event) {
+    event.preventDefault();
 
-    if($(this).attr('edit_type') == 'button')
-    {
-        return false; 
+    if ($(this).attr('edit_type') == 'button') {
+        return false;
     }
 
     //make div editable
     $(this).closest('div').attr('contenteditable', 'true');
     //add bg css
-    $(this).addClass('bg-warning').css('padding','5px');
+    $(this).addClass('bg-warning').css('padding', '5px');
 
     $(this).focus();
-})  
+})
 //--->make div editable > end
 //--->button > edit > start 
-$(document).on('click', '.btn_edit', function(event) 
-{
+$(document).on('click', '.btn_edit', function (event) {
     event.preventDefault();
     var tbl_row = $(this).closest('tr');
 
@@ -203,28 +200,26 @@ $(document).on('click', '.btn_edit', function(event)
     tbl_row.find('.btn_cancel').show();
 
     //hide edit button
-    tbl_row.find('.btn_edit').hide(); 
+    tbl_row.find('.btn_edit').hide();
 
     //make the whole row editable
     tbl_row.find('.row_data')
-    .attr('contenteditable', 'true')
-    .attr('edit_type', 'button')
-    .addClass('bg-warning')
-    .css('padding','3px')
+        .attr('contenteditable', 'true')
+        .attr('edit_type', 'button')
+        .addClass('bg-warning')
+        .css('padding', '3px')
 
     //--->add the original entry > start
-    tbl_row.find('.row_data').each(function(index, val) 
-    {  
+    tbl_row.find('.row_data').each(function (index, val) {
         //this will help in case user decided to click on cancel button
         $(this).attr('original_entry', $(this).html());
-    });         
+    });
     //--->add the original entry > end
 
 });
 //--->button > edit > end
- //--->button > cancel > start  
-$(document).on('click', '.btn_cancel', function(event) 
-{
+//--->button > cancel > start  
+$(document).on('click', '.btn_cancel', function (event) {
     event.preventDefault();
 
     var tbl_row = $(this).closest('tr');
@@ -240,25 +235,23 @@ $(document).on('click', '.btn_cancel', function(event)
 
     //make the whole row editable
     tbl_row.find('.row_data')
-    .attr('edit_type', 'click')  
-    .removeClass('bg-warning')
-    .css('padding','') 
+        .attr('edit_type', 'click')
+        .removeClass('bg-warning')
+        .css('padding', '')
 
-    tbl_row.find('.row_data').each(function(index, val) 
-    {   
-        $(this).html( $(this).attr('original_entry') ); 
-    });  
+    tbl_row.find('.row_data').each(function (index, val) {
+        $(this).html($(this).attr('original_entry'));
+    });
 });
 //--->button > cancel > end
 //--->save whole row entery > start 
-$(document).on('click', '.btn_save', function(event) 
-{
+$(document).on('click', '.btn_save', function (event) {
     event.preventDefault();
     var tbl_row = $(this).closest('tr');
 
     var row_id = tbl_row.attr('row_id');
 
-    
+
     //hide save and cacel buttons
     tbl_row.find('.btn_save').hide();
     tbl_row.find('.btn_cancel').hide();
@@ -269,68 +262,105 @@ $(document).on('click', '.btn_save', function(event)
 
     //make the whole row editable
     tbl_row.find('.row_data')
-    .attr('edit_type', 'click') 
-    .removeClass('bg-warning')
-    .css('padding','') 
+        .attr('edit_type', 'click')
+        .removeClass('bg-warning')
+        .css('padding', '')
 
     //--->get row data > start
-    var arr = {}; 
-    tbl_row.find('.row_data').each(function(index, val) 
-    {   
-        var col_name = $(this).attr('col_name');  
-        var col_val  =  $(this).html();
+    var arr = {};
+    tbl_row.find('.row_data').each(function (index, val) {
+        var col_name = $(this).attr('col_name');
+        var col_val = $(this).html();
         arr[col_name] = col_val;
     });
     //--->get row data > end
 
     //use the "arr" object for your ajax call
-    $.extend(arr, {row_id:row_id});
+    $.extend(arr, { row_id: row_id });
     console.log(JSON.stringify(arr, null, 2))
     //out put to show
-    $('.post_msg').html( '<pre class="bg-success">'+JSON.stringify(arr, null, 2) +'</pre>')
+    $('.post_msg').html('<pre class="bg-success">' + JSON.stringify(arr, null, 2) + '</pre>')
     var num = arr.row_id;
-    var key = $("#table-json" ).attr("name");
+    var key = $("#table-json").attr("name");
     document.getElementById("table-json").value = myRelate.model.toJson();
     myRelate.isModified = false;
     let jsonData = myRelate.model.findNodeDataForKey(key);
     var store = jsonData.fields[num];
     store.rename = store.name;
     store.name = arr.name;
-    myRelate.model = go.Model.fromJson(myRelate.model.toJson());
+
+    let nodeDataArray = JSON.parse(myRelate.model.toJson()).nodeDataArray
+    let linkDataArray = JSON.parse(myRelate.model.toJson()).linkDataArray
+
+    for (let i = 0; i < nodeDataArray.length; i++) {
+        const nodeData = nodeDataArray[i];
+        const fields = nodeData.fields;
+
+        for (let j = 0; j < fields.length; j++) {
+            const field = fields[j];
+
+            if (field.rename !== "" && field.rename !== "0") {
+               
+                // 
+                console.log("nodeData.primaryKey", nodeData.primarykey, field.rename, field.name)
+                if(nodeData.primarykey == field.rename )  nodeDataArray[i].primarykey = field.name
+
+                for (let k = 0; k < linkDataArray.length; k++) {
+                    const linkData = linkDataArray[k];
+                    // console.log("linkData.from", linkData.from, "nodeData.key", nodeData.key)
+                    // console.log("linkData.fromPort", linkData.fromPort, "field.rename", field.rename)
+                    if(linkData.from === nodeData.key && linkData.fromPort === field.rename) {
+                        
+                        linkData.fromPort = field.name
+                    }
+                  
+                    if(linkData.to === nodeData.key && linkData.toPort === field.rename) {
+                        linkData.toPort = field.name
+                    }
+            
+                }
+            }
+        }
+
+
+    }
+    let data = JSON.parse(myRelate.model.toJson())
+    data.nodeDataArray = nodeDataArray;
+    data.linkDataArray = linkDataArray;
+    console.log(data)
+    myRelate.model = go.Model.fromJson(data);
 
 
 
 });
 //--->save whole row entery > end
 //--->save single field data > start
-$(document).on('focusout', '.row_data', function(event) 
-{
+$(document).on('focusout', '.row_data', function (event) {
     event.preventDefault();
 
-    if($(this).attr('edit_type') == 'button')
-    {
-        return false; 
+    if ($(this).attr('edit_type') == 'button') {
+        return false;
     }
 
-    var row_id = $(this).closest('tr').attr('row_id'); 
-    
-    var row_div = $(this)           
-    .removeClass('bg-warning') //add bg css
-    .css('padding','')
+    var row_id = $(this).closest('tr').attr('row_id');
 
-    var col_name = row_div.attr('col_name'); 
-    var col_val = row_div.html(); 
+    var row_div = $(this)
+        .removeClass('bg-warning') //add bg css
+        .css('padding', '')
+
+    var col_name = row_div.attr('col_name');
+    var col_val = row_div.html();
 
     var arr = {};
     arr[col_name] = col_val;
 
     //use the "arr" object for your ajax call
-    $.extend(arr, {row_id:row_id});
+    $.extend(arr, { row_id: row_id });
 
     //out put to show
-    $('.post_msg').html( '<pre class="bg-success">'+JSON.stringify(arr, null, 2) +'</pre>');
+    $('.post_msg').html('<pre class="bg-success">' + JSON.stringify(arr, null, 2) + '</pre>');
     var num = arr.row_id;
-    var key = $("#table-json" ).attr("name");
+    var key = $("#table-json").attr("name");
     document.getElementById("table-json").value = myRelate.model.toJson();
     myRelate.isModified = false;
     let jsonData = myRelate.model.findNodeDataForKey(key);
@@ -338,23 +368,23 @@ $(document).on('focusout', '.row_data', function(event)
     store.rename = store.name;
     store.name = arr.name;
     myRelate.model = go.Model.fromJson(myRelate.model.toJson());
-     
-    
-})  
+
+
+})
 //--->save single field data > end
-    function updateJson(input){
-        document.getElementById("table-json").value = myRelate.model.toJson();
-        download(myRelate.model.toJson(), "loadingData.json", "text/plain")
-        myRelate.isModified = false;
+function updateJson(input) {
+    document.getElementById("table-json").value = myRelate.model.toJson();
+    download(myRelate.model.toJson(), "loadingData.json", "text/plain")
+    myRelate.isModified = false;
 
-    }
+}
 
 
-    // $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
+// $('<button id="SaveButton" onclick="updateJson()">SaveJson</button>').appendTo('#container');
 //
 function sendJsonMysql(input) {
     var dataModalMysql = JSON.parse(Cookies.get("showJsonMysql"))
-    var dataArrayMysql =  myRelate.model.toJson();
+    var dataArrayMysql = myRelate.model.toJson();
     let hostname = dataModalMysql.hostname
     let dbname = dataModalMysql.dbname
     let username = dataModalMysql.username
@@ -371,21 +401,21 @@ function sendJsonMysql(input) {
             port,
             dataArrayMysql,
         },
-        beforeSend: function() {
+        beforeSend: function () {
             $("#myModalLoad").show();
         },
-        complete: function() {
+        complete: function () {
             $("#myModalLoad").hide();
         },
-            success: function (data) {
-                console.log(data)
-            }
-        });
+        success: function (data) {
+            console.log(data)
+        }
+    });
 }
 
 function sendJsonMongodb(input) {
     var dataModalMongodb = JSON.parse(Cookies.get("showJsonMongodb"))
-    var dataArrayMongodb =  myRelate.model.toJson();
+    var dataArrayMongodb = myRelate.model.toJson();
     let hostname = dataModalMongodb.hostname
     let dbname = dataModalMongodb.dbname
     let port = dataModalMongodb.port
@@ -398,10 +428,10 @@ function sendJsonMongodb(input) {
             port,
             dataArrayMongodb,
         },
-        beforeSend: function() {
+        beforeSend: function () {
             $("#myModalLoad").show();
         },
-        complete: function() {
+        complete: function () {
             $("#myModalLoad").hide();
         },
         success: function (data) {
