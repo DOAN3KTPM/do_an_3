@@ -858,7 +858,24 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     // Setup the connection
     val conn = DriverManager.getConnection(conn_str)
     val statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+    var linkdata = lines.substring(lines.indexOf("\"linkDataArray\": [")+20)
+    var p_from : List[String] = List()
 
+    if(linkdata != ""){
+      linkdata = linkdata.substring(0, linkdata.length - 4)
+      linkdata = linkdata.replaceAll("[\\r\\n]", "")
+      var array_data = linkdata.split("},")
+      for(i <-0 to array_data.length -1 ){
+        if (array_data(i) != "" || array_data(i) != " ") {
+          if (!array_data(i).contains("}")) {
+            array_data(i) += "}"
+          }
+          var parse_linkdata = net.liftweb.json.parse(array_data(i))
+          p_from = getElement("fromPort", parse_linkdata)(0) :: p_from
+        }
+      }
+    }
+    println(p_from)
     //    val client: MongoClient = MongoClient()
     var list_js = lines.substring(lines.indexOf(": [")+3,lines.indexOf("\"linkDataArray\"")-6)
     var list_json = list_js.split("[\\r\\n]")
@@ -943,7 +960,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           l_tb1 = list_tb1
         }
         l_tb1 = l_tb1.reverse
-
         var n_name = ""
         var n_type = ""
         for (i <- 0 to l_tb1.length - 1) {
@@ -952,7 +968,11 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           sql_1 += n_name + " "
           if (n_name != id) {
             if (n_type == "string" || n_type == "struct" || n_type == "array") {
-              sql_1 += "varchar(255),"
+              if(p_from.contains(n_name)){
+                sql_1 += "varchar(255),"
+              }else {
+                sql_1 += "text,"
+              }
             } else {
               if (n_type == "") {
                 sql_1 += "varchar(255),"
@@ -960,6 +980,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
                 sql_1 += n_type + ","
               }
             }
+
           } else {
             if (n_type == "") {
               sql_1 += "varchar(255),"
@@ -1120,6 +1141,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       relation_json = relation_json.substring(0, relation_json.length - 4)
       relation_json = relation_json.replaceAll("[\\r\\n]", "")
       var relation = relation_json.split("},")
+      println(relation_json)
       //***********************
       var add_relation = ""
       for (i <- 0 to relation.length - 1) {
@@ -1135,7 +1157,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
           val port_to = getElement("toPort", rel)
           list_key = port_from(0) :: list_key
           list_key = port_to(0) :: list_key
-          add_relation = "ALTER TABLE " + table_to(0) + " ADD FOREIGN KEY (" + port_to(0)+ ") REFERENCES " + table_from(0) + "(" + port_from(0)  + ");"
+          add_relation = "ALTER TABLE " + table_from(0) + " ADD FOREIGN KEY (" + port_from(0)+ ") REFERENCES " + table_to(0) + "(" + port_to(0)  + ");"
           println(add_relation)
           try {
             statement.executeUpdate(add_relation)
