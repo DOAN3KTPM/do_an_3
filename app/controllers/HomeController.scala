@@ -885,9 +885,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         val js = net.liftweb.json.parse(list_json(h))
         val collection = getElement("path",js)
         val mongoConn = MongoConnection()
-        if(collection(0).contains("/")){
-          key = collection(0).substring(collection(0).indexOf("/")+1)
-          collect = collection(0).substring(0,collection(0).indexOf("/"))
+        if(collection(0).contains(",")){
+          key = collection(0).substring(collection(0).indexOf(",")+1)
+          collect = collection(0).substring(0,collection(0).indexOf(","))
         }else{
           key = collection(0)
           collect = collection(0)
